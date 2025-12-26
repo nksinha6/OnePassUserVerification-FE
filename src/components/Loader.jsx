@@ -1,4 +1,4 @@
-import { UI_TEXT } from "../constants/ui.js";
+import { UI_TEXT } from "@/constants/ui.js";
 import "./Loader.css";
 
 export default function Loader() {

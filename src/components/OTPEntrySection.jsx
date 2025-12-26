@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Edit2, RefreshCw } from "lucide-react";
-import { UI_TEXT, FORM_CONFIG } from "../constants/ui";
+import { UI_TEXT, FORM_CONFIG } from "@/constants/ui";
 import {
   validateOTP,
   updateOtpValue,
   startResendTimer,
-} from "../utility/loginUtils";
+  formatPhoneForDisplay,
+} from "@/utility/loginUtils";
 
 const OTPEntrySection = ({
   phoneNumber,
@@ -22,22 +23,6 @@ const OTPEntrySection = ({
   );
   const [isResending, setIsResending] = useState(false);
   const otpRefs = useRef([]);
-
-  // Get country code and formatted number
-  const formatPhoneForDisplay = (phone) => {
-    if (!phone) return { countryCode: "", number: "" };
-
-    // Extract country code (e.g., +91, +1, +44)
-    const match = phone.match(/^(\+\d+)(.*)/);
-    if (match) {
-      return {
-        countryCode: match[1],
-        number: match[2],
-      };
-    }
-
-    return { countryCode: "", number: phone };
-  };
 
   const formattedPhone = formatPhoneForDisplay(phoneNumber);
 
@@ -67,10 +52,10 @@ const OTPEntrySection = ({
         otpRefs.current[index + 1]?.focus();
       }
 
-      // Auto-submit when OTP is complete
-      if (newOtp.length === FORM_CONFIG.OTP_LENGTH) {
-        handleSubmit(newOtp);
-      }
+      // // Auto-submit when OTP is complete
+      // if (newOtp.length === FORM_CONFIG.OTP_LENGTH) {
+      //   handleSubmit(newOtp);
+      // }
     },
     [otp, error]
   );

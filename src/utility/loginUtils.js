@@ -1,4 +1,4 @@
-import { UI_TEXT, FORM_CONFIG } from "../constants/ui";
+import { UI_TEXT, FORM_CONFIG } from "@/constants/ui";
 
 // Validate phone and OTP fields
 export const validateForm = (values, otpSent = false) => {
@@ -100,3 +100,21 @@ export const validateOTP = (otp) => {
   if (!/^\d{6}$/.test(otp)) return UI_TEXT.OTP_INVALID_ERROR;
   return "";
 };
+
+// Get country code and formatted number
+export const formatPhoneForDisplay = (phone) => {
+  if (!phone) return { countryCode: "", number: "" };
+
+  // Extract country code (e.g., +91, +1, +44)
+  const match = phone.match(/^(\+\d+)(.*)/);
+  if (match) {
+    return {
+      countryCode: match[1],
+      number: match[2],
+    };
+  }
+
+  return { countryCode: "", number: phone };
+};
+
+// --

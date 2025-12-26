@@ -49,3 +49,9 @@ export const FORM_CONFIG = {
   OTP_LENGTH: 6,
   RESEND_TIMER_SECONDS: 30,
 };
+
+export const ROUTES = {
+  LOGIN: "/login",
+  CHECKINS: "/checkins",
+  // Add other routes here as you create them
+};

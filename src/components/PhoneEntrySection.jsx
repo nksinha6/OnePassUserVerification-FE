@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import { UI_TEXT } from "../constants/ui";
-import { validatePhoneNumber } from "../utility/loginUtils";
+import { UI_TEXT } from "@/constants/ui";
+import { validatePhoneNumber } from "@/utility/loginUtils";
 
 const PhoneEntrySection = ({ initialPhone, onSubmit, isLoading, apiError }) => {
   const [phone, setPhone] = useState(initialPhone);
   const [error, setError] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
     if (apiError) {
@@ -22,7 +21,6 @@ const PhoneEntrySection = ({ initialPhone, onSubmit, isLoading, apiError }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitted(true);
 
     const validationError = validatePhoneNumber(phone);
     if (validationError) {

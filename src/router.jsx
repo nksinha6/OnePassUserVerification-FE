@@ -5,11 +5,13 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import LoginPage from "./pages/LoginPage";
-import AppLayout from "./pages/AppLayout";
-import PreviousCheckins from "./pages/PreviousCheckins";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "@/contexts/AuthContext";
+import LoginPage from "@/pages/LoginPage";
+import AppLayout from "@/pages/AppLayout";
+import PreviousCheckins from "@/pages/PreviousCheckins";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+import { ROUTES } from "@/constants/ui";
 
 // Create a wrapper component that uses AppLayout
 const LayoutWrapper = () => {
@@ -28,11 +30,11 @@ const Router = () => {
           {/* All routes that use AppLayout */}
           <Route element={<LayoutWrapper />}>
             {/* Login page - accessible to everyone */}
-            <Route path="/login" element={<LoginPage />} />
+            <Route path={ROUTES.LOGIN} element={<LoginPage />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/checkins" element={<PreviousCheckins />} />
+              <Route path={ROUTES.CHECKINS} element={<PreviousCheckins />} />
 
               {/* Add more protected routes here */}
             </Route>

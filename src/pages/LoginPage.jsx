@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import PhoneEntrySection from "../components/PhoneEntrySection";
-import OTPEntrySection from "../components/OTPEntrySection";
-import LoginHeader from "../components/LoginHeader";
-import { sendOtpApi, verifyOtpApi, resendOtpApi } from "../utility/loginUtils";
-import { UI_TEXT } from "../constants/ui";
+import { useAuth } from "@/contexts/AuthContext";
+import PhoneEntrySection from "@/components/PhoneEntrySection";
+import OTPEntrySection from "@/components/OTPEntrySection";
+import LoginHeader from "@/components/LoginHeader";
+import { sendOtpApi, verifyOtpApi, resendOtpApi } from "@/utility/loginUtils";
+import { UI_TEXT, ROUTES } from "@/constants/ui";
 
 // Import your logo image
-import LogoImage from "../assets/images/1pass_logo.jpg";
+import LogoImage from "@/assets/images/1pass_logo.jpg";
 
 const LoginPage = () => {
   const [otpSent, setOtpSent] = useState(false);

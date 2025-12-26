@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import Loader from "./Loader";
 
 const ProtectedRoute = () => {
@@ -16,7 +16,7 @@ const ProtectedRoute = () => {
         to="/login"
         replace
         state={{
-          from: location.pathname,
+          from: location,
           message: "Please login to access this page",
         }}
       />

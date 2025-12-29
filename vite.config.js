@@ -26,12 +26,5 @@ export default defineConfig({
   server: {
     host: true, // allow access from network
     allowedHosts: "all",
-    proxy: {
-      "/api": {
-        target: "https://whale-app-tcfko.ondigitalocean.app", // Your backend URL
-        changeOrigin: true,
-        secure: false,
-      },
-    },
   },
 });

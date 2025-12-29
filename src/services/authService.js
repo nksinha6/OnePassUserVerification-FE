@@ -1,4 +1,5 @@
-const SESSION_KEY = "authSession";
+import { STORAGE_KEYS } from "@/constants/config";
+import { ERROR_MESSAGES } from "@/constants/ui";
 
 /**
  * Get current session data
@@ -6,7 +7,7 @@ const SESSION_KEY = "authSession";
  */
 export const getSession = () => {
   try {
-    const sessionData = sessionStorage.getItem(SESSION_KEY);
+    const sessionData = sessionStorage.getItem(STORAGE_KEYS.SESSION);
 
     if (!sessionData) {
       return null;
@@ -30,7 +31,7 @@ export const getSession = () => {
 
     return parsedData;
   } catch (error) {
-    console.error("Error getting session:", error);
+    console.error(ERROR_MESSAGES.CLEAR_SESSION_FAILED, error);
     clearSession();
     return null;
   }
@@ -42,18 +43,23 @@ export const getSession = () => {
  * @returns {Object} Result object with success status and optional error
  */
 export const setSession = (phoneNumber) => {
+  const phoneStr =
+    phoneNumber && typeof phoneNumber === "object"
+      ? phoneNumber.phone || ""
+      : String(phoneNumber || "");
+
   // Basic validation
-  if (!phoneNumber || phoneNumber.trim().length < 10) {
-    return { success: false, error: "Please enter a valid phone number" };
+  if (!phoneStr || phoneStr.trim().length < 10) {
+    return { success: false, error: ERROR_MESSAGES.INVALID_PHONE };
   }
 
   try {
     const sessionData = {
-      phone: phoneNumber.trim(),
+      phone: phoneStr.trim(),
       timestamp: Date.now(),
     };
 
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    sessionStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
     return { success: true };
   } catch (error) {
     console.error("Error setting session:", error);
@@ -61,13 +67,13 @@ export const setSession = (phoneNumber) => {
     if (error.name === "QuotaExceededError") {
       return {
         success: false,
-        error: "Browser storage is full. Please clear some data.",
+        error: ERROR_MESSAGES.STORAGE_FULL,
       };
     }
 
     return {
       success: false,
-      error: "Failed to save session. Please try again.",
+      error: ERROR_MESSAGES.SAVE_SESSION_FAILED,
     };
   }
 };
@@ -78,13 +84,13 @@ export const setSession = (phoneNumber) => {
  */
 export const clearSession = () => {
   try {
-    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(STORAGE_KEYS.SESSION);
     return { success: true };
   } catch (error) {
-    console.error("Error clearing session:", error);
+    console.error(ERROR_MESSAGES.CLEAR_SESSION_FAILED, error);
     return {
       success: false,
-      error: "Failed to clear session. Please try again.",
+      error: ERROR_MESSAGES.CLEAR_SESSION_FAILED,
     };
   }
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { UI_TEXT } from "@/constants/ui";
 import { validatePhoneNumber } from "@/utility/loginUtils";
 
@@ -9,13 +9,11 @@ const PhoneEntrySection = ({ initialPhone, onSubmit, isLoading, apiError }) => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (apiError) {
-      setError(apiError);
-    }
+    if (apiError) setError(apiError);
   }, [apiError]);
 
   const handlePhoneChange = (value) => {
-    setPhone(value);
+    setPhone(`+${value}`);
     if (error) setError("");
   };
 
@@ -39,18 +37,19 @@ const PhoneEntrySection = ({ initialPhone, onSubmit, isLoading, apiError }) => {
             {UI_TEXT.MOBILE_NUMBER_LABEL}
           </label>
           <PhoneInput
-            international
-            defaultCountry="IN"
-            countryCallingCodeEditable={false}
-            value={phone}
+            country="in"
+            value={phone.replace("+", "")}
             onChange={handlePhoneChange}
             disabled={isLoading}
-            placeholder={UI_TEXT.PHONE_PLACEHOLDER}
-            className={`w-full rounded-lg border px-3 py-3 text-sm ${
-              error ? "border-red-300" : "border-gray-300"
-            }`}
-            autoFocus
+            countryCodeEditable={false}
+            masks={{ in: "..... ....." }}
+            containerClass="!w-full custom-phone-input"
+            inputClass={`!w-full !h-15 !pl-13 !pr-4 !rounded-xl !border ${
+              error ? "!border-red-300" : "!border-gray-300" // !text-base
+            } !focus:outline-none !focus:ring-2 !focus:ring-brand`}
+            buttonClass="!border-0 !bg-transparent !pl-3"
           />
+
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>
 

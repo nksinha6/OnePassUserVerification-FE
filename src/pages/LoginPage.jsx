@@ -5,6 +5,7 @@ import PhoneEntrySection from "@/components/PhoneEntrySection";
 import OTPEntrySection from "@/components/OTPEntrySection";
 import LoginHeader from "@/components/LoginHeader";
 import { sendOtpApi, verifyOtpApi, resendOtpApi } from "@/utility/loginUtils";
+import { getGuestByPhone, parsePhoneNumber } from "@/services/guestService";
 import { UI_TEXT, ROUTES } from "@/constants/ui";
 
 // Import your logo image
@@ -20,11 +21,11 @@ const LoginPage = () => {
   const { isAuthenticated, login, isLoading: authLoading } = useAuth();
 
   // Redirect if already authenticated
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      navigate("/checkins", { replace: true });
-    }
-  }, [isAuthenticated, authLoading, navigate]);
+  // useEffect(() => {
+  //   if (!authLoading && isAuthenticated) {
+  //     navigate("/checkins", { replace: true });
+  //   }
+  // }, [isAuthenticated, authLoading, navigate]);
 
   const handlePhoneSubmit = async (phone) => {
     setPhoneNumber(phone);
@@ -54,8 +55,27 @@ const LoginPage = () => {
       const response = await verifyOtpApi(phoneNumber, enteredOtp);
 
       if (response.success) {
-        await login(phoneNumber);
-        navigate("/checkins", { replace: true });
+        // After OTP verification, fetch guest information
+        const { countryCode, phoneNumber: phoneNo } =
+          parsePhoneNumber(phoneNumber);
+        const guest = await getGuestByPhone(countryCode, phoneNo);
+        console.log(guest);
+
+        // Prepare data for login
+        const loginData = {
+          phone: phoneNumber,
+          guestData: guest || null, // Include guest data if available
+        };
+
+        // Login with guest data
+        await login(loginData);
+
+        // Store guest data in session for later use if needed
+        if (guest) {
+          sessionStorage.setItem("currentGuest", JSON.stringify(guest));
+        }
+
+        navigate(ROUTES.CHECKINS, { replace: true });
       } else {
         setApiError(
           response.message || UI_TEXT.OTP_INVALID_ERROR || "Invalid OTP"
@@ -68,6 +88,15 @@ const LoginPage = () => {
         setApiError("Browser storage is full. Please clear cache.");
       } else if (error.message.includes("valid")) {
         setApiError("Invalid phone number format");
+      } else if (error.response?.status === 404) {
+        // Guest not found - this is okay, it might be a new user
+        // Proceed with login anyway
+        const loginData = {
+          phone: phoneNumber,
+          guestData: null,
+        };
+        await login(loginData);
+        navigate(ROUTES.CHECKINS, { replace: true });
       } else {
         setApiError(error.message || "Login failed. Please try again.");
       }

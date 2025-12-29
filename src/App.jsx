@@ -1,7 +1,8 @@
-import React from "react";
+import "./App.css"; // Import App-specific styles
+import Router from "./router"; // Import your router
 
-const App = () => {
-  return <div>App</div>;
-};
+function App() {
+  return <Router />; // Just render the router
+}
 
 export default App;

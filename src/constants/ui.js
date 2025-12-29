@@ -6,7 +6,7 @@ export const UI_TEXT = {
 
   // Form labels
   MOBILE_NUMBER_LABEL: "Mobile Number",
-  OTP_LABEL: "Enter 6-digit OTP",
+  OTP_LABEL: "Enter OTP",
   REMEMBER_ME_LABEL: "Remember me",
 
   // Placeholders
@@ -14,6 +14,8 @@ export const UI_TEXT = {
 
   // Helper text
   OTP_HELPER_TEXT: "We'll send an OTP to this number",
+  OTP_VERIFICATION_TITLE: "Verify OTP",
+  OTP_VERIFICATION_SUBTITLE: "Enter the OTP sent to your mobile number",
 
   // Button texts
   SEND_OTP_BUTTON: "Send OTP",
@@ -37,10 +39,19 @@ export const UI_TEXT = {
   PHONE_REQUIRED_ERROR: "Phone number is required",
   PHONE_INVALID_ERROR: "Please enter a valid phone number",
   OTP_REQUIRED_ERROR: "OTP is required",
-  OTP_INVALID_ERROR: "Please enter a valid 6-digit OTP",
+  OTP_INVALID_ERROR: "Please enter a valid OTP",
+
+  // Loader Text
+  LOADER_TEXT: "Loading...",
 };
 
 export const FORM_CONFIG = {
   OTP_LENGTH: 6,
   RESEND_TIMER_SECONDS: 30,
+};
+
+export const ROUTES = {
+  LOGIN: "/login",
+  CHECKINS: "/checkins",
+  // Add other routes here as you create them
 };

@@ -21,11 +21,11 @@ const LoginPage = () => {
   const { isAuthenticated, login, isLoading: authLoading } = useAuth();
 
   // Redirect if already authenticated
-  // useEffect(() => {
-  //   if (!authLoading && isAuthenticated) {
-  //     navigate("/checkins", { replace: true });
-  //   }
-  // }, [isAuthenticated, authLoading, navigate]);
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate("/checkins", { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handlePhoneSubmit = async (phone) => {
     setPhoneNumber(phone);

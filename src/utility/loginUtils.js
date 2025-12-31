@@ -103,18 +103,22 @@ export const validateOTP = (otp) => {
 
 // Get country code and formatted number
 export const formatPhoneForDisplay = (phone) => {
-  if (!phone) return { countryCode: "", number: "" };
+  if (!phone && phone !== 0) return { countryCode: "", number: "" };
 
-  // Extract country code (e.g., +91, +1, +44)
-  const match = phone.match(/^(\+\d+)(.*)/);
-  if (match) {
+  const phoneString = String(phone);
+
+  // Simple formatting: +91 84011 59610
+  if (phoneString.startsWith("+91") && phoneString.length === 13) {
     return {
-      countryCode: match[1],
-      number: match[2],
+      countryCode: "+91",
+      number: `${phoneString.substring(3, 8)} ${phoneString.substring(8)}`,
     };
   }
 
-  return { countryCode: "", number: phone };
+  // Return as is for other formats
+  return {
+    countryCode: phoneString.substring(0, 3), // First 3 chars
+    number: phoneString.substring(3), // Rest
+  };
 };
-
 // --

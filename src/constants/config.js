@@ -8,6 +8,7 @@ export const TENANT_ID = 1;
 export const API_ENDPOINTS = {
   HOTEL_GUEST_BY_PHONE: "/HotelGuestRead/guest_by_id",
   DIGILOCKER_VERIFY_ACCOUNT: "/digilocker/verify-account",
+  DIGILOCKER_CREATE_URL: "/digilocker/create-url",
 };
 
 // Storage Keys (only what we need)

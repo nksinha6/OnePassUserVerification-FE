@@ -9,6 +9,8 @@ export const API_ENDPOINTS = {
   HOTEL_GUEST_BY_PHONE: "/HotelGuestRead/guest_by_id",
   DIGILOCKER_VERIFY_ACCOUNT: "/digilocker/verify-account",
   DIGILOCKER_CREATE_URL: "/digilocker/create-url",
+  AADHAAR_DATA: "/digilocker/aadhaar",
+  FACE_MATCH: "/faceverification/match",
 };
 
 // Storage Keys (only what we need)

@@ -25,7 +25,8 @@ export default defineConfig({
   },
   server: {
     host: true, // allow access from network
-    allowedHosts: "all",
+    allowedHosts: ["all", "cd387bf6c0c5.ngrok-free.app"],
+
     proxy: {
       "/api": {
         target: "https://whale-app-tcfko.ondigitalocean.app", // Your backend URL

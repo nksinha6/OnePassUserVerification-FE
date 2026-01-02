@@ -8,6 +8,7 @@ import {
 import { AuthProvider } from "@/contexts/AuthContext";
 import LoginPage from "@/pages/LoginPage";
 import AppLayout from "@/pages/AppLayout";
+import MobileSelfiePage from "@/pages/MobileSelfiePage";
 import PreviousCheckins from "@/pages/PreviousCheckins";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -31,10 +32,12 @@ const Router = () => {
           <Route element={<LayoutWrapper />}>
             {/* Login page - accessible to everyone */}
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+            <Route path={ROUTES.SELFIE} element={<MobileSelfiePage />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>
               <Route path={ROUTES.CHECKINS} element={<PreviousCheckins />} />
+              {/* <Route path={ROUTES.SELFIE} element={<MobileSelfiePage />} /> */}
 
               {/* Add more protected routes here */}
             </Route>

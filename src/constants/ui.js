@@ -61,5 +61,6 @@ export const ERROR_MESSAGES = {
 export const ROUTES = {
   LOGIN: "/login",
   CHECKINS: "/checkins",
+  SELFIE: "/selfie",
   // Add other routes here as you create them
 };

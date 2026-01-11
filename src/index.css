@@ -67,3 +67,35 @@
     height: 20px;
   }
 }
+
+/* -- Selfie Capture Area Changes -- */
+
+/* Oval mask overlay */
+.selfie-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 30, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+/* Transparent oval hole */
+.selfie-mask::before {
+  content: "";
+  width: 260px;
+  height: 360px;
+  border-radius: 50% / 45%;
+  box-shadow: 0 0 0 2000px rgba(10, 14, 30, 0.75);
+}
+
+/* Oval border */
+.selfie-oval {
+  position: absolute;
+  width: 260px;
+  height: 360px;
+  border-radius: 50% / 45%;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  z-index: 6;
+}

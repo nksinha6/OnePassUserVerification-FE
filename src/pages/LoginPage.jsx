@@ -58,7 +58,19 @@ const LoginPage = () => {
         phoneForApi
       );
 
+      // const digilockerResponse = {
+      //   verification_id: "3e774286-2e95-439e-9b42-e2392561b825",
+      //   reference_id: 158736,
+      //   digilocker_id: "8bb626bf-34aa-5rrc-a123-e69217e139a8",
+      //   status: "ACCOUNT_EXISTS",
+      // };
+
       console.log("Digilocker API Response:", digilockerResponse);
+
+      sessionStorage.setItem(
+        "digilockerResponse",
+        JSON.stringify(digilockerResponse)
+      );
 
       const ACCOUNT_EXISTS = "ACCOUNT_EXISTS";
       const ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";

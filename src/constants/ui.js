@@ -50,6 +50,14 @@ export const FORM_CONFIG = {
   RESEND_TIMER_SECONDS: 30,
 };
 
+export const ERROR_MESSAGES = {
+  INVALID_PHONE: "Please enter a valid phone number",
+  STORAGE_FULL: "Browser storage is full. Please clear some data.",
+  SAVE_SESSION_FAILED: "Failed to save session. Please try again.",
+  CLEAR_SESSION_FAILED: "Failed to clear session. Please try again.",
+  GET_SESSION_FAILED: "Error getting session data",
+};
+
 export const ROUTES = {
   LOGIN: "/login",
   CHECKINS: "/checkins",

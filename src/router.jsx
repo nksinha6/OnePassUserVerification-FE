@@ -41,7 +41,7 @@ const Router = () => {
           </Route>
 
           {/* Catch-all - redirect to login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

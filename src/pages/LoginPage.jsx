@@ -52,24 +52,25 @@ const LoginPage = () => {
       // Step 1: Call Digilocker verification API
       const verificationId = generateVerificationId();
       const phoneForApi = phone.replace(/^\+91/, "");
+      const { countryCode } = parsePhoneNumber(phone);
+      const cleanCountryCode = countryCode.replace("+", ""); // "91"
 
       const digilockerResponse = await verifyDigilockerAccount(
         verificationId,
         phoneForApi
       );
 
-      // const digilockerResponse = {
-      //   verification_id: "3e774286-2e95-439e-9b42-e2392561b825",
-      //   reference_id: 158736,
-      //   digilocker_id: "8bb626bf-34aa-5rrc-a123-e69217e139a8",
-      //   status: "ACCOUNT_EXISTS",
-      // };
-
       console.log("Digilocker API Response:", digilockerResponse);
+
+      const enrichedDigilockerResponse = {
+        ...digilockerResponse,
+        phoneNumber: phoneForApi,
+        countryCode: cleanCountryCode,
+      };
 
       sessionStorage.setItem(
         "digilockerResponse",
-        JSON.stringify(digilockerResponse)
+        JSON.stringify(enrichedDigilockerResponse)
       );
 
       const ACCOUNT_EXISTS = "ACCOUNT_EXISTS";
@@ -98,6 +99,7 @@ const LoginPage = () => {
           digilockerResponse.verification_id || verificationId;
 
         const redirectUrl = "";
+        // const redirectUrl = `${window.location.origin}${ROUTES.SELFIE}`; // Redirect to selfie page after Digilocker
 
         const digilockerUrlResponse = await createDigilockerUrl(
           digilockerVerificationId,
@@ -196,7 +198,7 @@ const LoginPage = () => {
         }
 
         // Check verification status and redirect accordingly
-        if (guest && guest.verificationStatus === "Pending") {
+        if (guest && guest.verificationStatus === "pending") {
           // Redirect to Digilocker URL stored in session storage
           const digilockerRedirectUrl = sessionStorage.getItem(
             "digilockerRedirectUrl"
@@ -234,7 +236,7 @@ const LoginPage = () => {
           console.log(
             "No guest data or unknown status, redirecting to checkins"
           );
-          navigate(ROUTES.CHECKINS, { replace: true });
+          navigate(ROUTES.LOGIN, { replace: true });
         }
       } else {
         setApiError(

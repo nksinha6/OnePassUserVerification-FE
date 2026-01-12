@@ -11,6 +11,8 @@ export const API_ENDPOINTS = {
   DIGILOCKER_CREATE_URL: "/digilocker/create-url",
   AADHAAR_DATA: "/digilocker/aadhaar",
   FACE_MATCH: "/faceverification/match",
+  PERSIST_SELFIE: "/guest/persist/selfie",
+  PERSIST_AADHAAR_VERIFY: "/guest/persist/aadhaar/verify",
 };
 
 // Storage Keys (only what we need)

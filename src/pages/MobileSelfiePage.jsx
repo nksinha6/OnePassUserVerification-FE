@@ -1,7 +1,10 @@
 import { useRef, useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { getAadhaarData, matchFace } from "../services/aadhaarService";
+import {
+  getAadhaarData,
+  matchFace,
+  persistGuestSelfie,
+  persistAadhaarVerify,
+} from "../services/aadhaarService";
 
 /* 🔹 Single source of truth */
 const OVAL_WIDTH = 260;
@@ -24,28 +27,36 @@ function MobileSelfiePage() {
     sessionStorage.getItem("digilockerResponse")
   );
 
+  console.log("📦 DigiLocker Response:", digilockerResponse);
+
   // 🔹 Used ONLY for Aadhaar fetch
   const verificationId = digilockerResponse?.verification_id;
   const referenceId = digilockerResponse?.reference_id;
+  const phoneCode = digilockerResponse?.countryCode;
+  const phoneNumber = digilockerResponse?.phoneNumber;
 
   const AADHAAR_STORAGE_KEY = "aadhaarData";
 
   /* ---------------- FETCH AADHAAR DATA ---------------- */
   useEffect(() => {
     const fetchAadhaarData = async () => {
-      // if (!verificationId || !referenceId) {
-      //   toast.error("Verification IDs not found");
-      //   return;
-      // }
-
       try {
         setIsLoading(true);
-        const data = await getAadhaarData(verificationId, referenceId);
+        console.log("🔄 Fetching Aadhaar data...");
+
+        const data = await getAadhaarData(
+          verificationId,
+          referenceId,
+          phoneCode,
+          phoneNumber
+        );
+
         setAadhaarData(data);
         localStorage.setItem(AADHAAR_STORAGE_KEY, JSON.stringify(data));
+
+        console.log("✅ Aadhaar data fetched successfully", data);
       } catch (error) {
-        console.error(error);
-        toast.error("Failed to fetch Aadhaar data");
+        console.error("❌ Failed to fetch Aadhaar data", error);
       } finally {
         setIsLoading(false);
       }
@@ -61,9 +72,11 @@ function MobileSelfiePage() {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user" },
         });
+
         videoRef.current.srcObject = stream;
-      } catch {
-        toast.error("Camera permission denied");
+        console.log("📷 Camera started");
+      } catch (error) {
+        console.error("❌ Camera permission denied", error);
       }
     };
 
@@ -72,6 +85,7 @@ function MobileSelfiePage() {
     return () => {
       if (videoRef.current?.srcObject) {
         videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
+        console.log("🛑 Camera stopped");
       }
     };
   }, []);
@@ -96,7 +110,6 @@ function MobileSelfiePage() {
     const vw = video.videoWidth;
     const vh = video.videoHeight;
 
-    // Crop matches oval aspect ratio
     const cropWidth = vw * 0.6;
     const cropHeight = cropWidth * (OVAL_HEIGHT / OVAL_WIDTH);
 
@@ -107,16 +120,15 @@ function MobileSelfiePage() {
     const selfieDataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
     if (!aadhaarData?.photo_link) {
-      toast.error("Aadhaar photo missing");
+      console.error("❌ Aadhaar photo missing");
       return;
     }
 
     try {
       setIsLoading(true);
 
-      // 🔹 NEW verification ID for every selfie attempt
       const faceMatchVerificationId = generateVerificationId();
-      console.log("Face Match Verification ID:", faceMatchVerificationId);
+      console.log("🆔 Face Match Verification ID:", faceMatchVerificationId);
 
       const selfieFile = dataUrlToFile(selfieDataUrl, "selfie.jpg");
       const aadhaarFile = dataUrlToFile(
@@ -124,25 +136,37 @@ function MobileSelfiePage() {
         "aadhaar.jpg"
       );
 
+      console.log("📤 Calling Face Match API...");
+
       const result = await matchFace(
-        faceMatchVerificationId, // ✅ NEW ID HERE
+        faceMatchVerificationId,
         selfieFile,
         aadhaarFile,
         0.75
       );
 
-      console.log("Face Match Result:", result);
+      console.log("📸 Face Match Result:", result);
 
       if (result.face_match_result === "YES") {
-        toast.success("MATCH ✔ Face verified");
+        console.log("✅ MATCH ✔ Face verified");
         setMatchResult("MATCH ✔");
+
+        try {
+          await persistGuestSelfie(phoneCode, phoneNumber, selfieFile);
+          console.log("✅ Selfie saved successfully");
+
+          await persistAadhaarVerify(phoneCode, phoneNumber, aadhaarData?.name);
+
+          console.log("✅ Aadhaar verification saved");
+        } catch (error) {
+          console.error("❌ Failed to persist selfie / Aadhaar verify", error);
+        }
       } else {
-        toast.error("NO MATCH ❌");
+        console.error("❌ NO MATCH");
         setMatchResult("NO MATCH ❌");
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Face verification failed");
+      console.error("❌ Face verification failed", error);
     } finally {
       setIsLoading(false);
     }
@@ -151,8 +175,6 @@ function MobileSelfiePage() {
   /* ---------------- UI ---------------- */
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <ToastContainer />
-
       <div className="relative w-[380px] h-[750px] bg-black rounded-3xl overflow-hidden shadow-2xl">
         {/* Camera */}
         <video
@@ -163,7 +185,7 @@ function MobileSelfiePage() {
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* 🌫️ Outer Blur */}
+        {/* Blur Mask */}
         <svg
           className="absolute inset-0 z-10 pointer-events-none"
           width="100%"
@@ -189,9 +211,8 @@ function MobileSelfiePage() {
               style={{
                 width: "100%",
                 height: "100%",
-                background: "rgba(0, 0, 0, 0.74)",
+                background: "rgba(0,0,0,0.74)",
                 backdropFilter: "blur(5.9px)",
-                WebkitBackdropFilter: "blur(5.9px)",
               }}
             />
           </foreignObject>
@@ -207,7 +228,7 @@ function MobileSelfiePage() {
           />
         </svg>
 
-        {/* Text */}
+        {/* Header */}
         <div className="absolute top-6 w-full text-center z-20">
           <h2 className="text-white text-lg font-semibold">
             Verify your identity

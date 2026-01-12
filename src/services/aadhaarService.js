@@ -8,14 +8,21 @@ import { API_ENDPOINTS } from "@/constants/config";
  * @param {string} referenceId - Reference ID
  * @returns {Promise} Aadhaar data or null if not found
  */
-export const getAadhaarData = async (verificationId, referenceId) => {
+export const getAadhaarData = async (
+  verificationId,
+  referenceId,
+  phoneCode,
+  phoneNumber
+) => {
   try {
-    const response = await apiClient.get(API_ENDPOINTS.AADHAAR_DATA, {
-      params: {
-        verificationId,
-        referenceId,
-      },
+    const response = await apiClient.post(API_ENDPOINTS.AADHAAR_DATA, {
+      verificationId,
+      referenceId,
+      phoneCountryCode: phoneCode,
+      phoneNumber,
     });
+
+    console.log(response.data);
     return response.data;
   } catch (error) {
     if (error.response?.status === 404) {
@@ -70,6 +77,94 @@ export const matchFace = async (
       throw new Error("Face not detected in image(s)");
     }
     console.error("Error in face match verification:", error);
+    throw error;
+  }
+};
+
+/**
+ * Persist guest selfie using phone details
+ * POST: /api/guest/persist/selfie
+ *
+ * @param {string} phoneCountryCode
+ * @param {string} phoneNumber
+ * @param {File} selfieFile
+ * @returns {Promise}
+ */
+export const persistGuestSelfie = async (
+  phoneCountryCode,
+  phoneNumber,
+  selfieFile
+) => {
+  try {
+    const formData = new FormData();
+    formData.append("phoneCountryCode", phoneCountryCode);
+    formData.append("phoneNumber", phoneNumber);
+    formData.append("selfie", selfieFile);
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.PERSIST_SELFIE,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 400) {
+      throw new Error("Invalid selfie or phone data");
+    }
+    if (error.response?.status === 401) {
+      throw new Error("Unauthorized request");
+    }
+    if (error.response?.status === 413) {
+      throw new Error("Selfie image too large");
+    }
+
+    console.error("Error persisting selfie:", error);
+    throw error;
+  }
+};
+
+/**
+ * Persist Aadhaar verification details for guest
+ * POST: /api/guest/persist/aadhaar/verify
+ *
+ * @param {string} phoneCountryCode
+ * @param {string} phoneNumber
+ * @param {string} name
+ * @returns {Promise}
+ */
+export const persistAadhaarVerify = async (
+  phoneCountryCode,
+  phoneNumber,
+  name
+) => {
+  try {
+    const payload = {
+      phoneCountryCode,
+      phoneNumber,
+      name,
+    };
+
+    const response = await apiClient.post(
+      API_ENDPOINTS.PERSIST_AADHAAR_VERIFY,
+      payload
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 400) {
+      throw new Error("Invalid Aadhaar verification data");
+    }
+    if (error.response?.status === 401) {
+      throw new Error("Unauthorized request");
+    }
+    if (error.response?.status === 404) {
+      throw new Error("Guest not found");
+    }
+
+    console.error("Error persisting Aadhaar verification:", error);
     throw error;
   }
 };

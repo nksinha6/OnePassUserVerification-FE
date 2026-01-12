@@ -1,8 +1,8 @@
-import "./App.css"; // Import App-specific styles
-import Router from "./router"; // Import your router
-
-function App() {
-  return <Router />; // Just render the router
+export default function App() {
+  return (
+    <div style={{ padding: 40 }}>
+      <h1>🚀 Vite + React is working!</h1>
+      <p>If you see this on DigitalOcean, deployment is correct.</p>
+    </div>
+  );
 }
-
-export default App;

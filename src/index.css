@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+  --max-width-content: 430px;
+
+  --color-brand: #1b3631;
+  --color-primary: #2563eb;
+  --color-danger: #dc2626;
+  --color-bg: #f8fafc;
+}
+
+/* -- React phone input 2 -- */
+.custom-phone-input {
+  position: relative;
+}
+
+.custom-phone-input::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  pointer-events: none;
+}
+
+.custom-phone-input.react-tel-input {
+  border-radius: 0.75rem;
+}
+
+/* Increase flag size */
+.custom-phone-input .selected-flag .flag {
+  transform: scale(1.4);
+  transform-origin: center;
+  border-radius: 0.1rem;
+}
+
+.react-tel-input .arrow {
+  display: none;
+}
+
+.custom-phone-input input.form-control {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  font-size: 14px !important;
+  font-weight: 500;
+}
+
+.custom-phone-input .selected-flag {
+  font-size: 14px !important;
+  height: 95% !important;
+  margin-top: 0.5px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .PhoneInput {
+    padding: 4px 8px;
+  }
+
+  .PhoneInputCountry {
+    margin-right: 8px;
+    margin-left: 4px;
+  }
+
+  .PhoneInputCountryIcon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* -- Selfie Capture Area Changes -- */
+
+/* Oval mask overlay */
+.selfie-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 30, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+/* Transparent oval hole */
+.selfie-mask::before {
+  content: "";
+  width: 260px;
+  height: 360px;
+  border-radius: 50% / 45%;
+  box-shadow: 0 0 0 2000px rgba(10, 14, 30, 0.75);
+}
+
+/* Oval border */
+.selfie-oval {
+  position: absolute;
+  width: 260px;
+  height: 360px;
+  border-radius: 50% / 45%;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  z-index: 6;
+}

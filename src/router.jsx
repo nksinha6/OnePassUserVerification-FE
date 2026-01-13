@@ -32,12 +32,11 @@ const Router = () => {
           <Route element={<LayoutWrapper />}>
             {/* Login page - accessible to everyone */}
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-            <Route path={ROUTES.SELFIE} element={<MobileSelfiePage />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>
               <Route path={ROUTES.CHECKINS} element={<PreviousCheckins />} />
-              {/* <Route path={ROUTES.SELFIE} element={<MobileSelfiePage />} /> */}
+              <Route path={ROUTES.SELFIE} element={<MobileSelfiePage />} />
 
               {/* Add more protected routes here */}
             </Route>

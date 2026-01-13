@@ -4,14 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import PhoneEntrySection from "@/components/PhoneEntrySection";
 import OTPEntrySection from "@/components/OTPEntrySection";
 import LoginHeader from "@/components/LoginHeader";
-import { sendOtpApi, verifyOtpApi, resendOtpApi } from "@/utility/loginUtils";
 import { getGuestByPhone, parsePhoneNumber } from "@/services/guestService";
 import { UI_TEXT, ROUTES } from "@/constants/ui";
-// Import the API function
 import {
   verifyDigilockerAccount,
   createDigilockerUrl,
 } from "@/services/digilockerService";
+
+import { loginService, verifyOtpService } from "@/services/authService";
 
 // Import your logo image
 import LogoImage from "@/assets/images/1pass_logo.jpg";
@@ -26,11 +26,11 @@ const LoginPage = () => {
   const { isAuthenticated, login, isLoading: authLoading } = useAuth();
 
   // Redirect if already authenticated
-  // useEffect(() => {
-  //   if (!authLoading && isAuthenticated) {
-  //     navigate("/checkins", { replace: true });
-  //   }
-  // }, [isAuthenticated, authLoading, navigate]);
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate(ROUTES.CHECKINS, { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   // Function to generate random verification ID
   const generateVerificationId = () => {
@@ -49,116 +49,63 @@ const LoginPage = () => {
     setApiError("");
 
     try {
-      // Step 1: Call Digilocker verification API
       const verificationId = generateVerificationId();
       const phoneForApi = phone.replace(/^\+91/, "");
       const { countryCode } = parsePhoneNumber(phone);
-      const cleanCountryCode = countryCode.replace("+", ""); // "91"
+      const cleanCountryCode = countryCode.replace("+", "");
+
+      // Send OTP
+      await loginService(cleanCountryCode, phoneForApi);
 
       const digilockerResponse = await verifyDigilockerAccount(
         verificationId,
         phoneForApi
       );
 
-      console.log("Digilocker API Response:", digilockerResponse);
-
-      const enrichedDigilockerResponse = {
-        ...digilockerResponse,
-        phoneNumber: phoneForApi,
-        countryCode: cleanCountryCode,
-      };
-
       sessionStorage.setItem(
         "digilockerResponse",
-        JSON.stringify(enrichedDigilockerResponse)
+        JSON.stringify({
+          ...digilockerResponse,
+          phoneNumber: phoneForApi,
+          countryCode: cleanCountryCode,
+        })
       );
 
-      const ACCOUNT_EXISTS = "ACCOUNT_EXISTS";
-      const ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";
-
       let userFlow;
-      if (digilockerResponse.status === ACCOUNT_EXISTS) {
-        userFlow = "signin";
-      } else if (digilockerResponse.status === ACCOUNT_NOT_FOUND) {
+      if (digilockerResponse.status === "ACCOUNT_EXISTS") userFlow = "signin";
+      if (digilockerResponse.status === "ACCOUNT_NOT_FOUND")
         userFlow = "signup";
-      } else {
-        userFlow = "verify";
-      }
-      const responseVerificationId =
+
+      const digilockerVerificationId =
         digilockerResponse.verification_id || verificationId;
 
-      if (responseVerificationId) {
-        sessionStorage.setItem(
-          "digilockerVerificationId",
-          responseVerificationId
-        );
-      }
+      const redirectUrl = `https://seashell-app-dmof6.ondigitalocean.app${ROUTES.SELFIE}`;
 
-      try {
-        const digilockerVerificationId =
-          digilockerResponse.verification_id || verificationId;
+      const digilockerUrlResponse = await createDigilockerUrl(
+        digilockerVerificationId,
+        ["AADHAAR"],
+        redirectUrl,
+        userFlow
+      );
 
-        const redirectUrl = "";
-        // const redirectUrl = `${window.location.origin}${ROUTES.SELFIE}`; // Redirect to selfie page after Digilocker
+      sessionStorage.setItem(
+        "digilockerRedirectUrl",
+        digilockerUrlResponse.url
+      );
 
-        const digilockerUrlResponse = await createDigilockerUrl(
-          digilockerVerificationId,
-          ["AADHAAR"],
-          redirectUrl,
-          userFlow
-        );
-
-        console.log("Digilocker URL Response:", digilockerUrlResponse);
-
-        // Store the Digilocker URL and other data
-        const digilockerData = {
+      sessionStorage.setItem(
+        "digilockerSessionData",
+        JSON.stringify({
           verification_id: digilockerVerificationId,
-          userFlow: userFlow,
+          userFlow,
           phone: phoneForApi,
           status: digilockerResponse.status,
           url: digilockerUrlResponse.url,
-          timestamp: new Date().toISOString(),
-        };
-
-        if (digilockerUrlResponse.url) {
-          digilockerData.digilockerUrl = digilockerUrlResponse.url;
-          sessionStorage.setItem(
-            "digilockerRedirectUrl",
-            digilockerUrlResponse.url
-          );
-        }
-
-        // Store all data for later use
-        sessionStorage.setItem(
-          "digilockerSessionData",
-          JSON.stringify(digilockerData)
-        );
-      } catch (digilockerUrlError) {
-        console.error("Digilocker URL creation failed:", digilockerUrlError);
-        setApiError(
-          digilockerUrlError.message ||
-            "Failed to create Digilocker sharing URL"
-        );
-        return;
-      }
-
-      // Step 3: Send OTP
-      await sendOtpApi(phone);
+        })
+      );
       setOtpSent(true);
     } catch (error) {
-      // Handle errors
-      if (error.response?.status === 400) {
-        setApiError("Invalid phone number format");
-      } else if (error.response?.status === 404) {
-        setApiError("Service unavailable. Please try again later.");
-      } else if (
-        error.message?.includes("Digilocker") ||
-        error.message?.includes("verification")
-      ) {
-        setApiError(error.message || "Digilocker verification failed");
-      } else {
-        setApiError(error.message || "Failed to send OTP");
-      }
+      setApiError(error.message || "Failed to send OTP");
     } finally {
       setIsLoading(false);
     }
@@ -174,98 +121,55 @@ const LoginPage = () => {
     setApiError("");
 
     try {
-      const response = await verifyOtpApi(phoneNumber, enteredOtp);
+      const { countryCode, phoneNumber: phoneNo } =
+        parsePhoneNumber(phoneNumber);
 
-      if (response.success) {
-        // After OTP verification, fetch guest information
-        const { countryCode, phoneNumber: phoneNo } =
-          parsePhoneNumber(phoneNumber);
-        const guest = await getGuestByPhone(countryCode, phoneNo);
-        console.log("Guest data:", guest);
+      const cleanCountryCode = countryCode.replace("+", "");
 
-        // Prepare data for login
-        const loginData = {
-          phone: phoneNumber,
-          guestData: guest || null,
-        };
+      const response = await verifyOtpService(
+        cleanCountryCode,
+        phoneNo,
+        enteredOtp
+      );
 
-        // Login with guest data
-        await login(loginData);
+      console.log("VERIFY OTP RESPONSE:", response);
 
-        // Store guest data in session for later use if needed
-        if (guest) {
-          sessionStorage.setItem("currentGuest", JSON.stringify(guest));
+      if (response.verificationStatus === true) {
+        const guest = await getGuestByPhone(cleanCountryCode, phoneNo);
+        console.log("GUEST:", guest);
+
+        if (!guest) {
+          setApiError("No account found. Please complete signup.");
+          return;
         }
 
-        // Check verification status and redirect accordingly
-        if (guest && guest.verificationStatus === "pending") {
-          // Redirect to Digilocker URL stored in session storage
+        await login({
+          phone: phoneNumber,
+          guestData: guest,
+        });
+
+        if (guest.verificationStatus === "pending") {
           const digilockerRedirectUrl = sessionStorage.getItem(
             "digilockerRedirectUrl"
           );
 
           if (digilockerRedirectUrl) {
-            console.log("Redirecting to Digilocker for verification");
-            // Redirect to Digilocker
             window.location.href = digilockerRedirectUrl;
-            return; // Important: return here to prevent further navigation
-          } else {
-            // Fallback: try to get URL from digilockerSessionData
-            const digilockerSessionData = sessionStorage.getItem(
-              "digilockerSessionData"
-            );
-            if (digilockerSessionData) {
-              const parsedData = JSON.parse(digilockerSessionData);
-              if (parsedData.url || parsedData.digilockerUrl) {
-                window.location.href =
-                  parsedData.url || parsedData.digilockerUrl;
-                return;
-              }
-            }
-
-            // If no URL found, redirect to checkins as fallback
-            console.warn("Digilocker URL not found, redirecting to login");
-            navigate(ROUTES.LOGIN, { replace: true });
+            return;
           }
-        } else if (guest && guest.verificationStatus === "Verified") {
-          // Verified user - redirect to checkins
-          console.log("User is verified, redirecting to checkins");
-          navigate(ROUTES.CHECKINS, { replace: true });
-        } else {
-          // No guest data or unknown status - redirect to checkins
-          console.log(
-            "No guest data or unknown status, redirecting to checkins"
-          );
-          navigate(ROUTES.LOGIN, { replace: true });
         }
+
+        if (guest.verificationStatus === "verified") {
+          navigate(ROUTES.CHECKINS, { replace: true });
+          return;
+        }
+
+        setApiError("Unable to proceed. Please contact support.");
       } else {
-        setApiError(
-          response.message || UI_TEXT.OTP_INVALID_ERROR || "Invalid OTP"
-        );
+        setApiError(UI_TEXT.OTP_INVALID_ERROR || "Invalid OTP");
       }
     } catch (error) {
-      console.error("Login failed:", error);
-
-      if (error.message.includes("full")) {
-        setApiError("Browser storage is full. Please clear cache.");
-      } else if (error.message.includes("valid")) {
-        setApiError("Invalid phone number format");
-      } else if (error.response?.status === 404) {
-        // Guest not found - this is okay, it might be a new user
-        // Proceed with login anyway
-        const loginData = {
-          phone: phoneNumber,
-          guestData: null,
-        };
-        await login(loginData);
-
-        // For new users (404), check if we should redirect to Digilocker
-        // or to checkins. Based on your flow, redirect to checkins.
-        console.log("New user (404), redirecting to checkins");
-        navigate(ROUTES.CHECKINS, { replace: true });
-      } else {
-        setApiError(error.message || "Login failed. Please try again.");
-      }
+      setApiError(error.message || "OTP verification failed");
     } finally {
       setIsLoading(false);
     }
@@ -276,8 +180,17 @@ const LoginPage = () => {
 
     setIsLoading(true);
     setApiError("");
+
     try {
-      await resendOtpApi(phoneNumber);
+      const { countryCode, phoneNumber: phoneNo } =
+        parsePhoneNumber(phoneNumber);
+
+      const cleanCountryCode = countryCode.replace("+", "");
+
+      // ✅ RESEND OTP using SAME API as initial send
+      await loginService(cleanCountryCode, phoneNo);
+
+      console.log("OTP resent successfully");
     } catch (error) {
       setApiError(error.message || "Failed to resend OTP");
     } finally {

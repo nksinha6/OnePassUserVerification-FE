@@ -1,10 +1,12 @@
 import { useRef, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getAadhaarData,
   matchFace,
   persistGuestSelfie,
   persistAadhaarVerify,
 } from "../services/aadhaarService";
+import { ROUTES } from "@/constants/ui";
 
 /* 🔹 Single source of truth */
 const OVAL_WIDTH = 260;
@@ -36,6 +38,8 @@ function MobileSelfiePage() {
   const phoneNumber = digilockerResponse?.phoneNumber;
 
   const AADHAAR_STORAGE_KEY = "aadhaarData";
+
+  const navigate = useNavigate();
 
   /* ---------------- FETCH AADHAAR DATA ---------------- */
   useEffect(() => {
@@ -158,6 +162,8 @@ function MobileSelfiePage() {
           await persistAadhaarVerify(phoneCode, phoneNumber, aadhaarData?.name);
 
           console.log("✅ Aadhaar verification saved");
+
+          navigate(ROUTES.SUCCESS, { replace: true });
         } catch (error) {
           console.error("❌ Failed to persist selfie / Aadhaar verify", error);
         }

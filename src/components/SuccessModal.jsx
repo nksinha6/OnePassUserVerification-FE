@@ -1,3 +1,5 @@
+import { IoClose } from "react-icons/io5";
+
 const SuccessModal = ({ open }) => {
   if (!open) return null;
 
@@ -8,18 +10,46 @@ const SuccessModal = ({ open }) => {
     }, 200);
   };
 
+  const closeButton = {
+    position: "absolute",
+    top: "14px",
+    right: "16px",
+    width: "34px",
+    height: "34px",
+    borderRadius: "50%",
+    backgroundColor: "#f1f3f5",
+    border: "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    color: "#495057",
+    transition: "all 0.2s ease",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+  };
+
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>
         {/* Close Button */}
-        <button style={closeButton} onClick={handleClose}>
-          ×
+        <button
+          style={closeButton}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#e9ecef";
+            e.currentTarget.style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#f1f3f5";
+            e.currentTarget.style.transform = "scale(1)";
+          }}
+          onClick={handleClose}
+        >
+          <IoClose size={18} />
         </button>
 
         {/* Success Animation */}
         <div style={iconWrapper}>
           <svg width="90" height="90" viewBox="0 0 52 52">
-            {/* Green filled circle */}
             <circle
               cx="26"
               cy="26"
@@ -27,8 +57,6 @@ const SuccessModal = ({ open }) => {
               fill="#28a745"
               style={circleFillStyle}
             />
-
-            {/* White checkmark */}
             <path
               fill="none"
               stroke="#ffffff"
@@ -42,7 +70,9 @@ const SuccessModal = ({ open }) => {
         </div>
 
         <h2 style={title}>Success</h2>
-        <p style={subtitle}>Your process has been completed successfully.</p>
+        <p style={subtitle}>
+          Your verification has been completed successfully.
+        </p>
       </div>
     </div>
   );
@@ -69,16 +99,6 @@ const modalStyle = {
   textAlign: "center",
 };
 
-const closeButton = {
-  position: "absolute",
-  top: "14px",
-  right: "16px",
-  background: "transparent",
-  border: "none",
-  fontSize: "20px",
-  cursor: "pointer",
-};
-
 const iconWrapper = {
   display: "flex",
   justifyContent: "center",
@@ -93,8 +113,10 @@ const title = {
 
 const subtitle = {
   margin: 0,
-  fontSize: "14px",
+  fontSize: "16px",
+  lineHeight: "1.5",
   color: "#444",
+  fontWeight: "500",
 };
 
 const circleFillStyle = {

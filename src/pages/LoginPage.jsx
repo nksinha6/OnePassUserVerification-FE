@@ -23,14 +23,12 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-
-  // ✅ REQUIRED AUTH CONTEXT
   const { isAuthenticated, login, isLoading: authLoading } = useAuth();
 
-  // ✅ Redirect if already authenticated (kept commented as requested)
+  // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate("/checkins", { replace: true });
+      navigate(ROUTES.CHECKINS, { replace: true });
     }
   }, [isAuthenticated, authLoading, navigate]);
 
@@ -56,7 +54,7 @@ const LoginPage = () => {
       const { countryCode } = parsePhoneNumber(phone);
       const cleanCountryCode = countryCode.replace("+", "");
 
-      // ✅ SEND OTP
+      // Send OTP
       await loginService(cleanCountryCode, phoneForApi);
 
       const digilockerResponse = await verifyDigilockerAccount(

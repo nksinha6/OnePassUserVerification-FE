@@ -138,24 +138,35 @@ const LoginPage = () => {
 
       if (response.verificationStatus === true) {
         const guest = await getGuestByPhone(cleanCountryCode, phoneNo);
-        console.log(guest);
+        console.log("GUEST:", guest);
+
+        if (!guest) {
+          setApiError("No account found. Please complete signup.");
+          return;
+        }
 
         await login({
           phone: phoneNumber,
-          guestData: guest || null,
+          guestData: guest,
         });
 
-        if (guest?.verificationStatus === "verified") {
+        if (guest.verificationStatus === "pending") {
           const digilockerRedirectUrl = sessionStorage.getItem(
             "digilockerRedirectUrl"
           );
+
           if (digilockerRedirectUrl) {
             window.location.href = digilockerRedirectUrl;
             return;
           }
         }
 
-        navigate(ROUTES.CHECKINS, { replace: true });
+        if (guest.verificationStatus === "verified") {
+          navigate(ROUTES.CHECKINS, { replace: true });
+          return;
+        }
+
+        setApiError("Unable to proceed. Please contact support.");
       } else {
         setApiError(UI_TEXT.OTP_INVALID_ERROR || "Invalid OTP");
       }

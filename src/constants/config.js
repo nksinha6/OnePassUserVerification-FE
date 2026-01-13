@@ -6,6 +6,8 @@ export const TENANT_ID = 1;
 
 // API Endpoints for your 1PassWebApp
 export const API_ENDPOINTS = {
+  LOGIN: "/guest/persist/sendOtp",
+  VERIFY_OTP: "/HotelGuestRead/verify_otp",
   HOTEL_GUEST_BY_PHONE: "/HotelGuestRead/guest_by_id",
   DIGILOCKER_VERIFY_ACCOUNT: "/digilocker/verify-account",
   DIGILOCKER_CREATE_URL: "/digilocker/create-url",

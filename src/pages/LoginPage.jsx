@@ -200,11 +200,16 @@ const LoginPage = () => {
     }
   };
 
+  const handleSignUp = () => {
+    console.log("Navigate to signup page");
+    // navigate("/signup");
+  };
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="min-h-screen bg-white border border-gray-200 flex flex-col">
         <div className="m-3 border border-gray-200 rounded-2xl overflow-hidden flex flex-col flex-1">
-          <LoginHeader logo={LogoImage} />
+          <LoginHeader logo={LogoImage} onSignUp={handleSignUp} />
 
           <main className="p-6 flex flex-col flex-1">
             {apiError && (

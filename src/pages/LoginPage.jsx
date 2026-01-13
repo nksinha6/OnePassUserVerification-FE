@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import PhoneEntrySection from "@/components/PhoneEntrySection";
 import OTPEntrySection from "@/components/OTPEntrySection";
 import LoginHeader from "@/components/LoginHeader";
-import { resendOtpApi } from "@/utility/loginUtils";
 import { getGuestByPhone, parsePhoneNumber } from "@/services/guestService";
 import { UI_TEXT, ROUTES } from "@/constants/ui";
 import {
@@ -174,7 +173,15 @@ const LoginPage = () => {
     setApiError("");
 
     try {
-      await resendOtpApi(phoneNumber);
+      const { countryCode, phoneNumber: phoneNo } =
+        parsePhoneNumber(phoneNumber);
+
+      const cleanCountryCode = countryCode.replace("+", "");
+
+      // ✅ RESEND OTP using SAME API as initial send
+      await loginService(cleanCountryCode, phoneNo);
+
+      console.log("OTP resent successfully");
     } catch (error) {
       setApiError(error.message || "Failed to resend OTP");
     } finally {

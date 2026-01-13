@@ -1,5 +1,7 @@
 import { STORAGE_KEYS } from "@/constants/config";
 import { ERROR_MESSAGES } from "@/constants/ui";
+import apiClient from "@/services/apiClient";
+import { API_ENDPOINTS } from "@/constants/config";
 
 /**
  * Get current session data
@@ -60,6 +62,7 @@ export const setSession = (phoneNumber) => {
     };
 
     sessionStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
+
     return { success: true };
   } catch (error) {
     console.error("Error setting session:", error);
@@ -92,5 +95,86 @@ export const clearSession = () => {
       success: false,
       error: ERROR_MESSAGES.CLEAR_SESSION_FAILED,
     };
+  }
+};
+
+/**
+ * ------------------------------------
+ * LOGIN SERVICE – SEND OTP
+ * ------------------------------------
+ */
+
+/**
+ * Login service (Send OTP)
+ * @param {string} phoneCountryCode
+ * @param {string} phoneNumber
+ * @returns {Promise<Object>}
+ */
+export const loginService = async (phoneCountryCode, phoneNumber) => {
+  // Basic validation
+  if (!phoneNumber || phoneNumber.trim().length < 10) {
+    throw new Error(ERROR_MESSAGES.INVALID_PHONE);
+  }
+
+  try {
+    const response = await apiClient.post(API_ENDPOINTS.LOGIN, {
+      phoneCountryCode,
+      phoneNumber,
+    });
+
+    // ✅ Save session after OTP is successfully sent
+    setSession(phoneNumber);
+
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 400) {
+      throw new Error(ERROR_MESSAGES.INVALID_PHONE);
+    }
+
+    if (error.response?.status === 401) {
+      throw new Error(ERROR_MESSAGES.AUTH_FAILED);
+    }
+
+    console.error("Login service error:", error);
+    throw error;
+  }
+};
+
+/**
+ * ------------------------------------
+ * VERIFY OTP SERVICE (NEW)
+ * ------------------------------------
+ */
+
+/**
+ * Verify OTP for login
+ * @param {string} phoneCountryCode
+ * @param {string} phoneNumber
+ * @param {string} otp
+ * @returns {Promise<Object>}
+ */
+export const verifyOtpService = async (phoneCountryCode, phoneNumber, otp) => {
+  if (!otp || otp.length < 4) {
+    throw new Error("Invalid OTP");
+  }
+
+  try {
+    const response = await apiClient.post(API_ENDPOINTS.VERIFY_OTP, {
+      phoneCountryCode,
+      phoneNumber,
+      otp,
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 400) {
+      throw new Error("Invalid OTP");
+    }
+    if (error.response?.status === 401) {
+      throw new Error("OTP verification failed");
+    }
+
+    console.error("Verify OTP service error:", error);
+    throw error;
   }
 };

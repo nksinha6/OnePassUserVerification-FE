@@ -62,5 +62,6 @@ export const ROUTES = {
   LOGIN: "/login",
   CHECKINS: "/checkins",
   SELFIE: "/selfie",
+  SUCCESS: "/success",
   // Add other routes here as you create them
 };

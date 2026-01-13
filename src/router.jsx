@@ -11,6 +11,7 @@ import AppLayout from "@/pages/AppLayout";
 import MobileSelfiePage from "@/pages/MobileSelfiePage";
 import PreviousCheckins from "@/pages/PreviousCheckins";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import SuccessPage from "@/pages/SuccessPage";
 
 import { ROUTES } from "@/constants/ui";
 
@@ -37,6 +38,7 @@ const Router = () => {
             <Route element={<ProtectedRoute />}>
               <Route path={ROUTES.CHECKINS} element={<PreviousCheckins />} />
               <Route path={ROUTES.SELFIE} element={<MobileSelfiePage />} />
+              <Route path={ROUTES.SUCCESS} element={<SuccessPage />} />
 
               {/* Add more protected routes here */}
             </Route>

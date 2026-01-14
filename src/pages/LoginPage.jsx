@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import PhoneEntrySection from "@/components/PhoneEntrySection";
@@ -10,10 +10,7 @@ import {
   verifyDigilockerAccount,
   createDigilockerUrl,
 } from "@/services/digilockerService";
-
 import { loginService, verifyOtpService } from "@/services/authService";
-
-// Import your logo image
 import LogoImage from "@/assets/images/1pass_logo.jpg";
 
 const LoginPage = () => {
@@ -23,16 +20,9 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { isAuthenticated, login, isLoading: authLoading } = useAuth();
+  const { login } = useAuth();
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      navigate(ROUTES.CHECKINS, { replace: true });
-    }
-  }, [isAuthenticated, authLoading, navigate]);
-
-  // Function to generate random verification ID
+  // 🔹 Generate random verification ID
   const generateVerificationId = () => {
     const chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -43,66 +33,20 @@ const LoginPage = () => {
     return result;
   };
 
+  /* ---------------- PHONE SUBMIT ---------------- */
   const handlePhoneSubmit = async (phone) => {
     setPhoneNumber(phone);
     setIsLoading(true);
     setApiError("");
 
     try {
-      const verificationId = generateVerificationId();
       const phoneForApi = phone.replace(/^\+91/, "");
       const { countryCode } = parsePhoneNumber(phone);
       const cleanCountryCode = countryCode.replace("+", "");
 
-      // Send OTP
+      // ✅ ONLY SEND OTP HERE
       await loginService(cleanCountryCode, phoneForApi);
 
-      const digilockerResponse = await verifyDigilockerAccount(
-        verificationId,
-        phoneForApi
-      );
-
-      sessionStorage.setItem(
-        "digilockerResponse",
-        JSON.stringify({
-          ...digilockerResponse,
-          phoneNumber: phoneForApi,
-          countryCode: cleanCountryCode,
-        })
-      );
-
-      let userFlow;
-      if (digilockerResponse.status === "ACCOUNT_EXISTS") userFlow = "signin";
-      if (digilockerResponse.status === "ACCOUNT_NOT_FOUND")
-        userFlow = "signup";
-
-      const digilockerVerificationId =
-        digilockerResponse.verification_id || verificationId;
-
-      const redirectUrl = `https://seashell-app-dmof6.ondigitalocean.app${ROUTES.SELFIE}`;
-
-      const digilockerUrlResponse = await createDigilockerUrl(
-        digilockerVerificationId,
-        ["AADHAAR"],
-        redirectUrl,
-        userFlow
-      );
-
-      sessionStorage.setItem(
-        "digilockerRedirectUrl",
-        digilockerUrlResponse.url
-      );
-
-      sessionStorage.setItem(
-        "digilockerSessionData",
-        JSON.stringify({
-          verification_id: digilockerVerificationId,
-          userFlow,
-          phone: phoneForApi,
-          status: digilockerResponse.status,
-          url: digilockerUrlResponse.url,
-        })
-      );
       setOtpSent(true);
     } catch (error) {
       setApiError(error.message || "Failed to send OTP");
@@ -116,6 +60,7 @@ const LoginPage = () => {
     setApiError("");
   };
 
+  /* ---------------- OTP SUBMIT ---------------- */
   const handleOtpSubmit = async (enteredOtp) => {
     setIsLoading(true);
     setApiError("");
@@ -123,7 +68,6 @@ const LoginPage = () => {
     try {
       const { countryCode, phoneNumber: phoneNo } =
         parsePhoneNumber(phoneNumber);
-
       const cleanCountryCode = countryCode.replace("+", "");
 
       const response = await verifyOtpService(
@@ -132,11 +76,8 @@ const LoginPage = () => {
         enteredOtp
       );
 
-      console.log("VERIFY OTP RESPONSE:", response);
-
       if (response.verificationStatus === true) {
         const guest = await getGuestByPhone(cleanCountryCode, phoneNo);
-        console.log("GUEST:", guest);
 
         if (!guest) {
           setApiError("No account found. Please complete signup.");
@@ -148,15 +89,61 @@ const LoginPage = () => {
           guestData: guest,
         });
 
+        /* 🔹 DIGILOCKER FLOW MOVED HERE */
         if (guest.verificationStatus === "pending") {
-          const digilockerRedirectUrl = sessionStorage.getItem(
-            "digilockerRedirectUrl"
+          const verificationId = generateVerificationId();
+
+          const digilockerResponse = await verifyDigilockerAccount(
+            verificationId,
+            phoneNo
           );
 
-          if (digilockerRedirectUrl) {
-            window.location.href = digilockerRedirectUrl;
-            return;
-          }
+          sessionStorage.setItem(
+            "digilockerResponse",
+            JSON.stringify({
+              ...digilockerResponse,
+              phoneNumber: phoneNo,
+              countryCode: cleanCountryCode,
+            })
+          );
+
+          let userFlow;
+          if (digilockerResponse.status === "ACCOUNT_EXISTS")
+            userFlow = "signin";
+          if (digilockerResponse.status === "ACCOUNT_NOT_FOUND")
+            userFlow = "signup";
+
+          const digilockerVerificationId =
+            digilockerResponse.verification_id || verificationId;
+
+          const redirectUrl = `https://seashell-app-dmof6.ondigitalocean.app${ROUTES.SELFIE}`;
+
+          const digilockerUrlResponse = await createDigilockerUrl(
+            digilockerVerificationId,
+            ["AADHAAR"],
+            redirectUrl,
+            userFlow
+          );
+
+          sessionStorage.setItem(
+            "digilockerRedirectUrl",
+            digilockerUrlResponse.url
+          );
+
+          sessionStorage.setItem(
+            "digilockerSessionData",
+            JSON.stringify({
+              verification_id: digilockerVerificationId,
+              userFlow,
+              phone: phoneNo,
+              status: digilockerResponse.status,
+              url: digilockerUrlResponse.url,
+            })
+          );
+
+          // 🔹 REDIRECT TO DIGILOCKER
+          window.location.href = digilockerUrlResponse.url;
+          return;
         }
 
         if (guest.verificationStatus === "verified") {
@@ -175,6 +162,7 @@ const LoginPage = () => {
     }
   };
 
+  /* ---------------- RESEND OTP ---------------- */
   const handleResendOtp = async () => {
     if (isLoading) return;
 
@@ -184,13 +172,9 @@ const LoginPage = () => {
     try {
       const { countryCode, phoneNumber: phoneNo } =
         parsePhoneNumber(phoneNumber);
-
       const cleanCountryCode = countryCode.replace("+", "");
 
-      // ✅ RESEND OTP using SAME API as initial send
       await loginService(cleanCountryCode, phoneNo);
-
-      console.log("OTP resent successfully");
     } catch (error) {
       setApiError(error.message || "Failed to resend OTP");
     } finally {
@@ -200,7 +184,6 @@ const LoginPage = () => {
 
   const handleSignUp = () => {
     console.log("Navigate to signup page");
-    // navigate("/signup");
   };
 
   return (

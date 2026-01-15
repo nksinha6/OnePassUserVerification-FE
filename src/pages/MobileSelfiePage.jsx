@@ -159,7 +159,16 @@ function MobileSelfiePage() {
           await persistGuestSelfie(phoneCode, phoneNumber, selfieFile);
           console.log("✅ Selfie saved successfully");
 
-          await persistAadhaarVerify(phoneCode, phoneNumber, aadhaarData?.name);
+          const country = aadhaarData?.split_address?.country;
+
+          await persistAadhaarVerify(
+            phoneCode,
+            phoneNumber,
+            aadhaarData?.name,
+            aadhaarData?.gender,
+            aadhaarData?.dob,
+            country === "India" ? "Indian" : country
+          );
 
           console.log("✅ Aadhaar verification saved");
 

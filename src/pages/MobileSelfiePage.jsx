@@ -159,7 +159,14 @@ function MobileSelfiePage() {
           await persistGuestSelfie(phoneCode, phoneNumber, selfieFile);
           console.log("✅ Selfie saved successfully");
 
-          await persistAadhaarVerify(phoneCode, phoneNumber, aadhaarData?.name);
+          await persistAadhaarVerify(
+            phoneCode,
+            phoneNumber,
+            aadhaarData?.name,
+            aadhaarData?.gender,
+            aadhaarData?.dob,
+            aadhaarData?.country
+          );
 
           console.log("✅ Aadhaar verification saved");
 

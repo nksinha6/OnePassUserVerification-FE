@@ -138,17 +138,23 @@ export const persistGuestSelfie = async (
 export const persistAadhaarVerify = async (
   phoneCountryCode,
   phoneNumber,
-  name
+  name,
+  gender,
+  dateOfBirth,
+  nationality
 ) => {
   try {
     const payload = {
       phoneCountryCode,
       phoneNumber,
       name,
+      gender,
+      dateOfBirth,
+      nationality,
     };
 
     const response = await apiClient.post(
-      API_ENDPOINTS.PERSIST_AADHAAR_VERIFY,
+      API_ENDPOINTS.PERSIST_AADHAAR_UPDATE,
       payload
     );
 

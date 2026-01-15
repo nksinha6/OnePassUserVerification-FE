@@ -165,7 +165,7 @@ function MobileSelfiePage() {
             aadhaarData?.name,
             aadhaarData?.gender,
             aadhaarData?.dob,
-            aadhaarData?.country
+            aadhaarData?.split_address?.country
           );
 
           console.log("✅ Aadhaar verification saved");

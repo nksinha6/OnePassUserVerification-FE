@@ -34,8 +34,6 @@ const Router = () => {
           <Route element={<LayoutWrapper />}>
             {/* Login page - accessible to everyone */}
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-            <Route path={ROUTES.SUCCESS} element={<SuccessPage />} />
-            <Route path={ROUTES.USER_DETAILS} element={<UserDetails />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>

@@ -12,6 +12,7 @@ import MobileSelfiePage from "@/pages/MobileSelfiePage";
 import PreviousCheckins from "@/pages/PreviousCheckins";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SuccessPage from "@/pages/SuccessPage";
+import UserDetails from "./pages/UserDetails";
 
 import { ROUTES } from "@/constants/ui";
 
@@ -33,12 +34,15 @@ const Router = () => {
           <Route element={<LayoutWrapper />}>
             {/* Login page - accessible to everyone */}
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+            <Route path={ROUTES.SUCCESS} element={<SuccessPage />} />
+            <Route path={ROUTES.USER_DETAILS} element={<UserDetails />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>
               <Route path={ROUTES.CHECKINS} element={<PreviousCheckins />} />
               <Route path={ROUTES.SELFIE} element={<MobileSelfiePage />} />
               <Route path={ROUTES.SUCCESS} element={<SuccessPage />} />
+              <Route path={ROUTES.USER_DETAILS} element={<UserDetails />} />
 
               {/* Add more protected routes here */}
             </Route>

@@ -1,4 +1,4 @@
-const LoginHeader = ({ logo, onSignUp }) => {
+const LoginHeader = ({ logo }) => {
   return (
     <header className="p-4 bg-brand flex justify-between items-center">
       {/* Left side: Logo */}
@@ -11,15 +11,6 @@ const LoginHeader = ({ logo, onSignUp }) => {
           />
         </div>
       </div>
-
-      {/* Right side: Signup Button */}
-      <button
-        type="button"
-        onClick={onSignUp}
-        className="px-4 py-2 bg-white text-brand rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-      >
-        Sign up
-      </button>
     </header>
   );
 };

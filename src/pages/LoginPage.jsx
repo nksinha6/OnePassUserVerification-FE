@@ -4,7 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import PhoneEntrySection from "@/components/PhoneEntrySection";
 import OTPEntrySection from "@/components/OTPEntrySection";
 import LoginHeader from "@/components/LoginHeader";
-import { getGuestByPhone, parsePhoneNumber } from "@/services/guestService";
+import {
+  getGuestByPhone,
+  parsePhoneNumber,
+  getGuestSelfieByPhone,
+} from "@/services/guestService";
 import { UI_TEXT, ROUTES } from "@/constants/ui";
 import {
   verifyDigilockerAccount,
@@ -84,6 +88,19 @@ const LoginPage = () => {
           return;
         }
 
+        if (guest) {
+          sessionStorage.setItem("guest", JSON.stringify(guest));
+        }
+
+        const guestSelfie = await getGuestSelfieByPhone(
+          cleanCountryCode, // "91"
+          phoneNo
+        );
+
+        if (guestSelfie) {
+          sessionStorage.setItem("guestSelfie", JSON.stringify(guestSelfie));
+        }
+
         await login({
           phone: phoneNumber,
           guestData: guest,
@@ -147,7 +164,7 @@ const LoginPage = () => {
         }
 
         if (guest.verificationStatus === "verified") {
-          navigate(ROUTES.CHECKINS, { replace: true });
+          navigate(ROUTES.USER_DETAILS, { replace: true });
           return;
         }
 

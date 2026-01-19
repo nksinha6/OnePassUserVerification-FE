@@ -71,3 +71,33 @@ export const parsePhoneNumber = (fullPhone) => {
 
   return { countryCode, phoneNumber };
 };
+
+/**
+ * Fetch guest selfie by phone number
+ * @param {string} phoneCountryCode - Country code (e.g., "91")
+ * @param {string} phoneNumber - Phone number without country code
+ * @returns {Promise} Selfie data or null if not found
+ */
+export const getGuestSelfieByPhone = async (phoneCountryCode, phoneNumber) => {
+  try {
+    const response = await apiClient.get(
+      API_ENDPOINTS.HOTEL_GUEST_SELFIE_BY_PHONE,
+      {
+        params: {
+          phoneCountryCode,
+          phoneno: phoneNumber,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.log("Guest selfie not found");
+      return null;
+    }
+
+    console.error("Error fetching guest selfie:", error);
+    return null;
+  }
+};

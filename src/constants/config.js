@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   LOGIN: "/guest/persist/sendOtp",
   VERIFY_OTP: "/HotelGuestRead/verify_otp",
   HOTEL_GUEST_BY_PHONE: "/HotelGuestRead/guest_by_id",
+  HOTEL_GUEST_SELFIE_BY_PHONE: "/HotelGuestRead/selfie",
   DIGILOCKER_VERIFY_ACCOUNT: "/digilocker/verify-account",
   DIGILOCKER_CREATE_URL: "/digilocker/create-url",
   AADHAAR_DATA: "/digilocker/aadhaar",

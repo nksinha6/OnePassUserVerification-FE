@@ -1,4 +1,5 @@
 import { IoClose } from "react-icons/io5";
+import { ROUTES } from "../constants/ui";
 
 const SuccessModal = ({ open }) => {
   if (!open) return null;
@@ -6,7 +7,7 @@ const SuccessModal = ({ open }) => {
   const handleClose = () => {
     window.close();
     setTimeout(() => {
-      window.location.replace("about:blank");
+      window.location.replace(ROUTES.USER_DETAILS);
     }, 200);
   };
 

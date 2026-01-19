@@ -38,6 +38,7 @@ function MobileSelfiePage() {
   const phoneNumber = digilockerResponse?.phoneNumber;
 
   const AADHAAR_STORAGE_KEY = "aadhaarData";
+  const SELFIE_STORAGE_KEY = "capturedSelfie";
 
   const navigate = useNavigate();
 
@@ -57,6 +58,7 @@ function MobileSelfiePage() {
 
         setAadhaarData(data);
         localStorage.setItem(AADHAAR_STORAGE_KEY, JSON.stringify(data));
+        sessionStorage.setItem(AADHAAR_STORAGE_KEY, JSON.stringify(data));
 
         console.log("✅ Aadhaar data fetched successfully", data);
       } catch (error) {
@@ -123,6 +125,9 @@ function MobileSelfiePage() {
     ctx.drawImage(video, sx, sy, cropWidth, cropHeight, 0, 0, 480, 480);
     const selfieDataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
+    sessionStorage.setItem(SELFIE_STORAGE_KEY, selfieDataUrl);
+    console.log("💾 Selfie stored in sessionStorage");
+
     if (!aadhaarData?.photo_link) {
       console.error("❌ Aadhaar photo missing");
       return;
@@ -156,12 +161,20 @@ function MobileSelfiePage() {
         setMatchResult("MATCH ✔");
 
         try {
-          await persistGuestSelfie(phoneCode, phoneNumber, selfieFile);
+          const persistSelfieResponse = await persistGuestSelfie(
+            phoneCode,
+            phoneNumber,
+            selfieFile
+          );
           console.log("✅ Selfie saved successfully");
+          sessionStorage.setItem(
+            "selfiePersistResponse",
+            JSON.stringify(persistSelfieResponse)
+          );
 
           const country = aadhaarData?.split_address?.country;
 
-          await persistAadhaarVerify(
+          const aadhaarVerifyResponse = await persistAadhaarVerify(
             phoneCode,
             phoneNumber,
             aadhaarData?.name,
@@ -169,8 +182,11 @@ function MobileSelfiePage() {
             aadhaarData?.dob,
             country === "India" ? "Indian" : country
           );
-
           console.log("✅ Aadhaar verification saved");
+          sessionStorage.setItem(
+            "aadhaarVerified",
+            JSON.stringify(aadhaarVerifyResponse)
+          );
 
           navigate(ROUTES.SUCCESS, { replace: true });
         } catch (error) {

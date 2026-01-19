@@ -133,7 +133,7 @@ const LoginPage = () => {
           const digilockerVerificationId =
             digilockerResponse.verification_id || verificationId;
 
-          const redirectUrl = `https://seashell-app-dmof6.ondigitalocean.app${ROUTES.SELFIE}`;
+          const redirectUrl = `https://authiko.in/user${ROUTES.SELFIE}`;
 
           const digilockerUrlResponse = await createDigilockerUrl(
             digilockerVerificationId,

@@ -5,6 +5,8 @@ import LogoImage from "@/assets/images/1pass_logo.jpg";
 const SELFIE_STORAGE_KEY = "capturedSelfie";
 const SELFIE_RESPONSE_KEY = "selfiePersistResponse";
 const AADHAAR_VERIFIED_KEY = "aadhaarVerified";
+const GUEST_KEY = "guest";
+const GUEST_SELFIE_KEY = "guestSelfie";
 
 const normalizeBase64Image = (base64) => {
   if (!base64) return null;
@@ -14,13 +16,21 @@ const normalizeBase64Image = (base64) => {
 
 const UserDetails = () => {
   const [user, setUser] = useState({
-    name: "",
-    mobile: "",
+    name: "—",
+    mobile: "—",
     status: 0,
     selfie: "",
   });
 
   useEffect(() => {
+    /* ---------------- PRIMARY SOURCES ---------------- */
+    const guestRaw = sessionStorage.getItem(GUEST_KEY);
+    const guest = guestRaw ? JSON.parse(guestRaw) : null;
+
+    const guestSelfieRaw = sessionStorage.getItem(GUEST_SELFIE_KEY);
+    const guestSelfie = guestSelfieRaw ? JSON.parse(guestSelfieRaw) : null;
+
+    /* ---------------- FALLBACK SOURCES ---------------- */
     const rawSelfie = sessionStorage.getItem(SELFIE_STORAGE_KEY);
 
     const selfieRespRaw = sessionStorage.getItem(SELFIE_RESPONSE_KEY);
@@ -31,14 +41,36 @@ const UserDetails = () => {
       ? JSON.parse(aadhaarVerifiedRaw)
       : null;
 
-    const countryCode = selfieResp?.phoneCountryCode || "+91";
-    const phoneNumber = selfieResp?.phoneNumber || "";
+    /* ---------------- NAME ---------------- */
+    const name =
+      guest?.fullName || selfieResp?.name || aadhaarVerified?.fullName || "—";
+
+    /* ---------------- MOBILE ---------------- */
+    const countryCode =
+      guest?.phoneCountryCode || selfieResp?.phoneCountryCode || "91";
+
+    const phoneNumber = guest?.phoneNumber || selfieResp?.phoneNumber || "";
+
+    const mobile = phoneNumber ? `${countryCode} ${phoneNumber}` : "—";
+
+    /* ---------------- STATUS ---------------- */
+    const status =
+      guest?.verificationStatus === "verified" ||
+      aadhaarVerified?.verificationStatus === 1
+        ? 1
+        : 0;
+
+    /* ---------------- SELFIE ---------------- */
+    const selfie =
+      normalizeBase64Image(guestSelfie?.image) ||
+      normalizeBase64Image(rawSelfie) ||
+      "";
 
     setUser({
-      name: selfieResp?.name || aadhaarVerified?.fullName || "—",
-      mobile: phoneNumber ? `+${countryCode} ${phoneNumber}` : "—",
-      status: aadhaarVerified?.verificationStatus === 1 ? 1 : 0,
-      selfie: normalizeBase64Image(rawSelfie),
+      name,
+      mobile,
+      status,
+      selfie,
     });
   }, []);
 
@@ -58,24 +90,24 @@ const UserDetails = () => {
               />
             </div>
 
-            {/* User Details - Side by Side */}
+            {/* User Details */}
             <div className="w-full px-8 space-y-4">
-              <div className="flex justify-start items-center">
-                <p className="text-sm text-gray-500">Full Name : &nbsp;</p>
+              <div className="flex items-center">
+                <p className="text-sm text-gray-500">Full Name :&nbsp;</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {user.name}
                 </p>
               </div>
 
-              <div className="flex justify-start items-center">
-                <p className="text-sm text-gray-500">Mobile Number : &nbsp;</p>
+              <div className="flex items-center">
+                <p className="text-sm text-gray-500">Mobile Number :&nbsp;</p>
                 <p className="text-sm font-semibold text-gray-700">
                   {user.mobile}
                 </p>
               </div>
 
-              <div className="flex justify-start items-center">
-                <p className="text-sm text-gray-500">Status : &nbsp;</p>
+              <div className="flex items-center">
+                <p className="text-sm text-gray-500">Status :&nbsp;</p>
                 <p
                   className={`text-sm font-semibold ${
                     user.status === 1 ? "text-green-600" : "text-yellow-600"

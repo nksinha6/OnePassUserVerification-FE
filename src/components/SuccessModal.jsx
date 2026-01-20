@@ -1,14 +1,14 @@
 import { IoClose } from "react-icons/io5";
 import { ROUTES } from "../constants/ui";
+import { useNavigate } from "react-router-dom";
 
 const SuccessModal = ({ open }) => {
+  const navigate = useNavigate();
+
   if (!open) return null;
 
   const handleClose = () => {
-    window.close();
-    setTimeout(() => {
-      window.location.replace(ROUTES.USER_DETAILS);
-    }, 200);
+    navigate(ROUTES.USER_DETAILS, { replace: true });
   };
 
   const closeButton = {

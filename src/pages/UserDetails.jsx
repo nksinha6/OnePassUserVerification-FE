@@ -62,6 +62,7 @@ const UserDetails = () => {
 
     /* ---------------- SELFIE ---------------- */
     const selfie =
+      normalizeBase64Image(selfieResp?.image) ||
       normalizeBase64Image(guestSelfie?.image) ||
       normalizeBase64Image(rawSelfie) ||
       "";

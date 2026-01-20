@@ -60,7 +60,7 @@ const UserDetails = () => {
         ? 1
         : 0;
 
-    /* ---------------- SELFIE (FIXED PRIORITY) ---------------- */
+    /* ---------------- SELFIE ---------------- */
     const selfie =
       normalizeBase64Image(selfieResp?.image) ||
       normalizeBase64Image(guestSelfie?.image) ||

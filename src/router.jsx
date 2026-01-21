@@ -12,12 +12,15 @@ import { ROUTES } from "@/constants/ui";
 // ✅ Compute basename for dev vs prod
 const basename = import.meta.env.DEV ? "/" : "/user";
 
-// Create a wrapper component that uses AppLayout
-const LayoutWrapper = () => (
-  <AppLayout>
-    <Outlet />
-  </AppLayout>
-);
+const Router = () => {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* All routes that use AppLayout */}
+          <Route element={<LayoutWrapper />}>
+            {/* Login page - accessible to everyone */}
+            <Route path={`${ROUTES.LOGIN}/:phone?`} element={<LoginPage />} />
 
 const Router = () => (
   <BrowserRouter basename={basename}>

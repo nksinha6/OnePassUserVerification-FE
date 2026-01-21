@@ -26,7 +26,7 @@ function MobileSelfiePage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const digilockerResponse = JSON.parse(
-    sessionStorage.getItem("digilockerResponse")
+    sessionStorage.getItem("digilockerResponse"),
   );
 
   console.log("📦 DigiLocker Response:", digilockerResponse);
@@ -53,7 +53,7 @@ function MobileSelfiePage() {
           verificationId,
           referenceId,
           phoneCode,
-          phoneNumber
+          phoneNumber,
         );
 
         setAadhaarData(data);
@@ -142,7 +142,7 @@ function MobileSelfiePage() {
       const selfieFile = dataUrlToFile(selfieDataUrl, "selfie.jpg");
       const aadhaarFile = dataUrlToFile(
         `data:image/jpeg;base64,${aadhaarData.photo_link}`,
-        "aadhaar.jpg"
+        "aadhaar.jpg",
       );
 
       console.log("📤 Calling Face Match API...");
@@ -151,7 +151,7 @@ function MobileSelfiePage() {
         faceMatchVerificationId,
         selfieFile,
         aadhaarFile,
-        0.75
+        0.75,
       );
 
       console.log("📸 Face Match Result:", result);
@@ -164,28 +164,30 @@ function MobileSelfiePage() {
           const persistSelfieResponse = await persistGuestSelfie(
             phoneCode,
             phoneNumber,
-            selfieFile
+            selfieFile,
           );
           console.log("✅ Selfie saved successfully");
           sessionStorage.setItem(
             "selfiePersistResponse",
-            JSON.stringify(persistSelfieResponse)
+            JSON.stringify(persistSelfieResponse),
           );
 
           const country = aadhaarData?.split_address?.country;
 
           const aadhaarVerifyResponse = await persistAadhaarVerify(
+            aadhaarData?.uid,
             phoneCode,
             phoneNumber,
             aadhaarData?.name,
             aadhaarData?.gender,
             aadhaarData?.dob,
-            country === "India" ? "Indian" : country
+            country === "India" ? "Indian" : country,
+            aadhaarData?.split_address ?? {},
           );
           console.log("✅ Aadhaar verification saved");
           sessionStorage.setItem(
             "aadhaarVerified",
-            JSON.stringify(aadhaarVerifyResponse)
+            JSON.stringify(aadhaarVerifyResponse),
           );
 
           navigate(ROUTES.SUCCESS, { replace: true });

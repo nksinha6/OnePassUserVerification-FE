@@ -12,7 +12,7 @@ export const getAadhaarData = async (
   verificationId,
   referenceId,
   phoneCode,
-  phoneNumber
+  phoneNumber,
 ) => {
   try {
     const response = await apiClient.post(API_ENDPOINTS.AADHAAR_DATA, {
@@ -52,7 +52,7 @@ export const matchFace = async (
   verificationId,
   selfieFile,
   idImageFile,
-  threshold = 0.75
+  threshold = 0.75,
 ) => {
   try {
     const formData = new FormData();
@@ -93,7 +93,7 @@ export const matchFace = async (
 export const persistGuestSelfie = async (
   phoneCountryCode,
   phoneNumber,
-  selfieFile
+  selfieFile,
 ) => {
   try {
     const formData = new FormData();
@@ -106,7 +106,7 @@ export const persistGuestSelfie = async (
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
-      }
+      },
     );
 
     return response.data;
@@ -136,26 +136,41 @@ export const persistGuestSelfie = async (
  * @returns {Promise}
  */
 export const persistAadhaarVerify = async (
+  uid,
   phoneCountryCode,
   phoneNumber,
   name,
   gender,
   dateOfBirth,
-  nationality
+  nationality,
+  splitAddress,
 ) => {
   try {
     const payload = {
+      uid,
       phoneCountryCode,
       phoneNumber,
       name,
       gender,
       dateOfBirth,
       nationality,
+      splitAddress: {
+        country: splitAddress?.country ?? null,
+        state: splitAddress?.state ?? null,
+        dist: splitAddress?.dist ?? null,
+        subdist: splitAddress?.subdist ?? null,
+        vtc: splitAddress?.vtc ?? null,
+        po: splitAddress?.po ?? null,
+        street: splitAddress?.street ?? null,
+        house: splitAddress?.house ?? null,
+        landmark: splitAddress?.landmark ?? null,
+        pincode: splitAddress?.pincode ?? null,
+      },
     };
 
     const response = await apiClient.post(
       API_ENDPOINTS.PERSIST_AADHAAR_UPDATE,
-      payload
+      payload,
     );
 
     return response.data;

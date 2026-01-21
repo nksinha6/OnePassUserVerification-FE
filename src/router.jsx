@@ -12,8 +12,7 @@ import MobileSelfiePage from "@/pages/MobileSelfiePage";
 import PreviousCheckins from "@/pages/PreviousCheckins";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SuccessPage from "@/pages/SuccessPage";
-import UserDetails from "./pages/UserDetails";
-
+import UserDetails from "@/pages/UserDetails";
 import { ROUTES } from "@/constants/ui";
 
 // Create a wrapper component that uses AppLayout
@@ -24,7 +23,6 @@ const LayoutWrapper = () => {
     </AppLayout>
   );
 };
-
 const Router = () => {
   return (
     <BrowserRouter>
@@ -41,7 +39,6 @@ const Router = () => {
               <Route path={ROUTES.SELFIE} element={<MobileSelfiePage />} />
               <Route path={ROUTES.SUCCESS} element={<SuccessPage />} />
               <Route path={ROUTES.USER_DETAILS} element={<UserDetails />} />
-
               {/* Add more protected routes here */}
             </Route>
           </Route>

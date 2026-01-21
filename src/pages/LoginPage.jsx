@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import PhoneEntrySection from "@/components/PhoneEntrySection";
 import OTPEntrySection from "@/components/OTPEntrySection";
@@ -13,11 +13,13 @@ import { UI_TEXT, ROUTES } from "@/constants/ui";
 import {
   verifyDigilockerAccount,
   createDigilockerUrl,
-} from "@/services/digilockerService";
+} from "@/services/digilockerService"; // ✅ REQUIRED
 import { loginService, verifyOtpService } from "@/services/authService";
 import LogoImage from "@/assets/images/1pass_logo.jpg";
 
 const LoginPage = () => {
+  const { phone } = useParams(); // e.g. 91-9876543210
+
   const [otpSent, setOtpSent] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [apiError, setApiError] = useState("");
@@ -26,7 +28,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // 🔹 Generate random verification ID
+  // 🔹 Generate random verification ID (unchanged)
   const generateVerificationId = () => {
     const chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -36,6 +38,14 @@ const LoginPage = () => {
     }
     return result;
   };
+
+  // ✅ AUTO-FILL PHONE FROM URL (NEW)
+  useEffect(() => {
+    if (phone) {
+      const normalized = phone.replace("-", "");
+      setPhoneNumber(`+${normalized}`); // +919876543210
+    }
+  }, [phone]);
 
   /* ---------------- PHONE SUBMIT ---------------- */
   const handlePhoneSubmit = async (phone) => {
@@ -48,9 +58,7 @@ const LoginPage = () => {
       const { countryCode } = parsePhoneNumber(phone);
       const cleanCountryCode = countryCode.replace("+", "");
 
-      // ✅ ONLY SEND OTP HERE
       await loginService(cleanCountryCode, phoneForApi);
-
       setOtpSent(true);
     } catch (error) {
       setApiError(error.message || "Failed to send OTP");
@@ -77,7 +85,7 @@ const LoginPage = () => {
       const response = await verifyOtpService(
         cleanCountryCode,
         phoneNo,
-        enteredOtp
+        enteredOtp,
       );
 
       if (response.verificationStatus === true) {
@@ -93,18 +101,15 @@ const LoginPage = () => {
         }
 
         const guestSelfie = await getGuestSelfieByPhone(
-          cleanCountryCode, // "91"
-          phoneNo
+          cleanCountryCode,
+          phoneNo,
         );
 
         if (guestSelfie) {
           sessionStorage.setItem("guestSelfie", JSON.stringify(guestSelfie));
         }
 
-        await login({
-          phone: phoneNumber,
-          guestData: guest,
-        });
+        await login({ phone: phoneNumber, guestData: guest });
 
         /* 🔹 DIGILOCKER FLOW MOVED HERE */
         if (guest.verificationStatus === "pending") {
@@ -112,7 +117,7 @@ const LoginPage = () => {
 
           const digilockerResponse = await verifyDigilockerAccount(
             verificationId,
-            phoneNo
+            phoneNo,
           );
 
           sessionStorage.setItem(
@@ -121,7 +126,7 @@ const LoginPage = () => {
               ...digilockerResponse,
               phoneNumber: phoneNo,
               countryCode: cleanCountryCode,
-            })
+            }),
           );
 
           let userFlow;
@@ -139,12 +144,12 @@ const LoginPage = () => {
             digilockerVerificationId,
             ["AADHAAR"],
             redirectUrl,
-            userFlow
+            userFlow,
           );
 
           sessionStorage.setItem(
             "digilockerRedirectUrl",
-            digilockerUrlResponse.url
+            digilockerUrlResponse.url,
           );
 
           sessionStorage.setItem(
@@ -155,7 +160,7 @@ const LoginPage = () => {
               phone: phoneNo,
               status: digilockerResponse.status,
               url: digilockerUrlResponse.url,
-            })
+            }),
           );
 
           // 🔹 REDIRECT TO DIGILOCKER
@@ -199,15 +204,11 @@ const LoginPage = () => {
     }
   };
 
-  const handleSignUp = () => {
-    console.log("Navigate to signup page");
-  };
-
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="min-h-screen bg-white border border-gray-200 flex flex-col">
         <div className="m-3 border border-gray-200 rounded-2xl overflow-hidden flex flex-col flex-1">
-          <LoginHeader logo={LogoImage} onSignUp={handleSignUp} />
+          <LoginHeader logo={LogoImage} />
 
           <main className="p-6 flex flex-col flex-1">
             {apiError && (

@@ -33,7 +33,8 @@ const Router = () => {
           {/* All routes that use AppLayout */}
           <Route element={<LayoutWrapper />}>
             {/* Login page - accessible to everyone */}
-            <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+            {/* <Route path={ROUTES.LOGIN} element={<LoginPage />} /> */}
+            <Route path={`${ROUTES.LOGIN}/:phone?`} element={<LoginPage />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>

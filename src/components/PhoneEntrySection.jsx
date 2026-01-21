@@ -5,13 +5,18 @@ import { UI_TEXT } from "@/constants/ui";
 import { validatePhoneNumber } from "@/utility/loginUtils";
 
 const PhoneEntrySection = ({ initialPhone, onSubmit, isLoading, apiError }) => {
-  const [phone, setPhone] = useState(initialPhone);
+  const [phone, setPhone] = useState(initialPhone || "");
   const [error, setError] = useState("");
 
+  // ✅ keep phone synced with parent
   useEffect(() => {
-    if (apiError) {
-      setError(apiError);
+    if (initialPhone) {
+      setPhone(initialPhone);
     }
+  }, [initialPhone]);
+
+  useEffect(() => {
+    if (apiError) setError(apiError);
   }, [apiError]);
 
   const handlePhoneChange = (value) => {
@@ -37,7 +42,6 @@ const PhoneEntrySection = ({ initialPhone, onSubmit, isLoading, apiError }) => {
       className="flex flex-col space-y-6"
       noValidate
     >
-      {/* Phone Input */}
       <div>
         <label className="block text-sm font-medium mb-2 text-gray-700">
           {UI_TEXT.MOBILE_NUMBER_LABEL}
@@ -60,7 +64,6 @@ const PhoneEntrySection = ({ initialPhone, onSubmit, isLoading, apiError }) => {
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       </div>
 
-      {/* Button directly below input */}
       <button
         type="submit"
         disabled={isLoading}

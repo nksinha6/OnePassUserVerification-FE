@@ -138,7 +138,7 @@ const LoginPage = () => {
           const digilockerVerificationId =
             digilockerResponse.verification_id || verificationId;
 
-          const redirectUrl = `https://authiko.in/user${ROUTES.SELFIE}`;
+          const redirectUrl = `https://authiko.in/user${ROUTES.FACE_MATCH_INTRO}`;
 
           const digilockerUrlResponse = await createDigilockerUrl(
             digilockerVerificationId,

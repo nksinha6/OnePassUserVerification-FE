@@ -79,7 +79,7 @@ function MobileSelfiePage() {
   useEffect(() => {
     if (streamRef.current && videoRef.current) {
       videoRef.current.srcObject = streamRef.current;
-      videoRef.current.play(); // 🔑 REQUIRED for iOS
+      videoRef.current.play();
     }
   }, []);
 

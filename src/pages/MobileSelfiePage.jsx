@@ -7,6 +7,7 @@ import {
   persistAadhaarVerify,
 } from "../services/aadhaarService";
 import { ROUTES } from "@/constants/ui";
+import { useCamera } from "@/contexts/CameraContext";
 
 /* 🔹 Single source of truth */
 const OVAL_WIDTH = 260;
@@ -24,6 +25,8 @@ function MobileSelfiePage() {
   const [matchResult, setMatchResult] = useState(null);
   const [aadhaarData, setAadhaarData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { streamRef, stopCamera } = useCamera();
 
   const digilockerResponse = JSON.parse(
     sessionStorage.getItem("digilockerResponse"),
@@ -72,28 +75,12 @@ function MobileSelfiePage() {
   }, [verificationId, referenceId]);
 
   /* ---------------- CAMERA ---------------- */
+
   useEffect(() => {
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-        });
-
-        videoRef.current.srcObject = stream;
-        console.log("📷 Camera started");
-      } catch (error) {
-        console.error("❌ Camera permission denied", error);
-      }
-    };
-
-    startCamera();
-
-    return () => {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
-        console.log("🛑 Camera stopped");
-      }
-    };
+    if (streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play(); // 🔑 REQUIRED for iOS
+    }
   }, []);
 
   /* ---------------- HELPERS ---------------- */
@@ -189,7 +176,7 @@ function MobileSelfiePage() {
             "aadhaarVerified",
             JSON.stringify(aadhaarVerifyResponse),
           );
-
+          stopCamera();
           navigate(ROUTES.SUCCESS, { replace: true });
         } catch (error) {
           console.error("❌ Failed to persist selfie / Aadhaar verify", error);
@@ -215,6 +202,7 @@ function MobileSelfiePage() {
           autoPlay
           playsInline
           muted
+          webkit-playsinline="true"
           className="absolute inset-0 w-full h-full object-cover"
         />
 

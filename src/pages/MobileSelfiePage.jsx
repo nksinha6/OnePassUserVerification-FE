@@ -139,7 +139,16 @@ function MobileSelfiePage() {
         console.log("✅ MATCH ✔ Face verified");
         setMatchResult("MATCH ✔");
 
-        await persistGuestSelfie(phoneCode, phoneNumber, selfieFile);
+        const persistSelfieResponse = await persistGuestSelfie(
+          phoneCode,
+          phoneNumber,
+          selfieFile,
+        );
+        console.log("✅ Selfie saved successfully");
+        sessionStorage.setItem(
+          "selfiePersistResponse",
+          JSON.stringify(persistSelfieResponse),
+        );
 
         const country = aadhaarData?.split_address?.country;
 

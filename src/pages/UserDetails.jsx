@@ -87,7 +87,7 @@ const UserDetails = () => {
               <img
                 src={user.selfie || LogoImage}
                 alt="User"
-                className="w-full h-full object-cover scale-150"
+                className="w-full h-full object-cover scale-125"
               />
             </div>
 

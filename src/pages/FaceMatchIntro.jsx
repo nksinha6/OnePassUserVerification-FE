@@ -25,7 +25,7 @@ const FaceMatchIntro = () => {
           <LoginHeader logo={LogoImage} />
 
           {/* BODY */}
-          <div className="flex-1 bg-white px-6 py-8 flex flex-col justify-between">
+          <div className="flex-1 bg-white px-6 py-8 flex flex-col gap-6">
             <div>
               <h1 className="text-xl font-semibold mb-3">
                 {UI_TEXT.FACE_MATCH_INTRO.TITLE}

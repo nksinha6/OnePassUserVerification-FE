@@ -48,177 +48,144 @@ const PreviousCheckins = () => {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8">
-          {/* Header with Back Button */}
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Check-in Status</h1>
-          </div>
+          {/* Title */}
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Check-in Status</h1>
 
-          {/* Stepper / Progress Bar */}
+          {/* Stepper */}
           <div className="mb-12">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex-1">
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
-                  <p className="text-xs font-semibold text-gray-700 mt-2 text-center">1. ENTER EMAIL</p>
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg mb-2">1</div>
+                <p className="text-sm font-semibold text-gray-700">ENTER EMAIL</p>
               </div>
-              <div className="flex-1 h-1 bg-green-500 mx-2"></div>
-              <div className="flex-1">
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
-                  <p className="text-xs font-semibold text-gray-700 mt-2 text-center">2. ID VERIFICATION</p>
-                </div>
+              
+              <div className="flex-1 h-1 bg-green-500 mx-4"></div>
+              
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg mb-2">2</div>
+                <p className="text-sm font-semibold text-gray-700">ID VERIFICATION</p>
               </div>
-              <div className="flex-1 h-1 bg-green-500 mx-2"></div>
-              <div className="flex-1">
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
-                  <p className="text-xs font-semibold text-gray-700 mt-2 text-center">3. COMPLETE VERIFICATION</p>
-                </div>
+              
+              <div className="flex-1 h-1 bg-green-500 mx-4"></div>
+              
+              <div className="flex flex-col items-center">
+                <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg mb-2">3</div>
+                <p className="text-sm font-semibold text-gray-700">COMPLETE VERIFICATION</p>
               </div>
             </div>
           </div>
 
-          {/* Verification Status Badge */}
-          <div className="flex items-center justify-end mb-8">
-            <span className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 font-semibold">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-              VERIFIED
-            </span>
-          </div>
-
-          {/* Verification Details */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-700 mb-6">VERIFICATION DETAILS</h2>
+          {/* Verification Details Section */}
+          <div className="mb-8">
+            <h2 className="text-lg font-bold text-gray-700 mb-4">VERIFICATION DETAILS</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
-                <p className="text-lg font-semibold text-gray-900">{verifiedData.name || "-"}</p>
+            <div className="border border-gray-300 rounded-lg p-6">
+              {/* VERIFIED Badge - Top Right */}
+              <div className="flex justify-end mb-6">
+                <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full font-bold">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  VERIFIED
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
-                <p className="text-lg font-semibold text-gray-900">{email || "-"}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Phone</label>
-                <p className="text-lg font-semibold text-gray-900">
-                  +{verifiedData.phoneCountryCode} {verifiedData.phoneNumber}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Gender</label>
-                <p className="text-lg font-semibold text-gray-900">{verifiedData.gender || "-"}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Date of Birth</label>
-                <p className="text-lg font-semibold text-gray-900">{verifiedData.dateOfBirth || "-"}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Nationality</label>
-                <p className="text-lg font-semibold text-gray-900">{verifiedData.nationality || "-"}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">UID</label>
-                <p className="text-lg font-semibold text-gray-900">{verifiedData.uid || "-"}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">City</label>
-                <p className="text-lg font-semibold text-gray-900">{city || "-"}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">State</label>
-                <p className="text-lg font-semibold text-gray-900">{state || "-"}</p>
+              {/* Verification Details Grid - Simplified */}
+              <div className="space-y-6">
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Full Name</div>
+                  <div className="text-lg font-semibold">{verifiedData.name || "-"}</div>
+                </div>
+                
+                <div>
+                  <div className="text-sm text-gray-600 mb-1">Phone</div>
+                  <div className="text-lg font-semibold">
+                    +{verifiedData.phoneCountryCode || "91"} {verifiedData.phoneNumber || "9876543210"}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">City</div>
+                    <div className="text-lg font-semibold">{city || "Mumbai"}</div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">State</div>
+                    <div className="text-lg font-semibold">{state || "Maharashtra"}</div>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Full Address */}
-            {verifiedData.splitAddress && (
-              <div className="mt-8 pt-8 border-t border-gray-200">
-                <h3 className="text-md font-bold text-gray-700 mb-4">Complete Address</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  {verifiedData.splitAddress.house && (
-                    <div>
-                      <span className="font-medium text-gray-600">House:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.house}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.street && (
-                    <div>
-                      <span className="font-medium text-gray-600">Street:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.street}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.landmark && (
-                    <div>
-                      <span className="font-medium text-gray-600">Landmark:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.landmark}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.vtc && (
-                    <div>
-                      <span className="font-medium text-gray-600">City:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.vtc}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.subdist && (
-                    <div>
-                      <span className="font-medium text-gray-600">Sub-District:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.subdist}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.dist && (
-                    <div>
-                      <span className="font-medium text-gray-600">District:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.dist}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.state && (
-                    <div>
-                      <span className="font-medium text-gray-600">State:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.state}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.pincode && (
-                    <div>
-                      <span className="font-medium text-gray-600">Pincode:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.pincode}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.po && (
-                    <div>
-                      <span className="font-medium text-gray-600">Post Office:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.po}</span>
-                    </div>
-                  )}
-                  {verifiedData.splitAddress.country && (
-                    <div>
-                      <span className="font-medium text-gray-600">Country:</span>
-                      <span className="text-gray-900"> {verifiedData.splitAddress.country}</span>
-                    </div>
+          {/* Proceed Button */}
+          <div className="flex justify-center">
+            <button
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-12 rounded-lg transition-colors"
+              onClick={() => {
+                console.log("Proceeding with verified data");
+              }}
+            >
+              Proceed to Check-In
+            </button>
+          </div>
+
+          {/* Full Details Section - Hidden by default, could be expandable */}
+          <div className="mt-12 border-t border-gray-200 pt-8">
+            <details className="group">
+              <summary className="flex items-center justify-between cursor-pointer text-gray-700 hover:text-gray-900">
+                <span className="font-semibold">View Complete Verification Details</span>
+                <svg className="w-5 h-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              
+              <div className="mt-6 bg-gray-50 rounded-lg p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Email</div>
+                    <div className="text-lg font-semibold text-gray-900">{email || "-"}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Gender</div>
+                    <div className="text-lg font-semibold text-gray-900">{verifiedData.gender || "-"}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Date of Birth</div>
+                    <div className="text-lg font-semibold text-gray-900">{verifiedData.dateOfBirth || "-"}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">Nationality</div>
+                    <div className="text-lg font-semibold text-gray-900">{verifiedData.nationality || "-"}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm text-gray-600 mb-1">UID</div>
+                    <div className="text-lg font-semibold text-gray-900">{verifiedData.uid || "-"}</div>
+                  </div>
+
+                  {verifiedData.splitAddress && (
+                    <>
+                      <div className="md:col-span-2">
+                        <div className="text-sm text-gray-600 mb-1">Complete Address</div>
+                        <div className="text-gray-900">
+                          {verifiedData.splitAddress.house && `${verifiedData.splitAddress.house}, `}
+                          {verifiedData.splitAddress.street && `${verifiedData.splitAddress.street}, `}
+                          {verifiedData.splitAddress.landmark && `${verifiedData.splitAddress.landmark}, `}
+                          {verifiedData.splitAddress.vtc && `${verifiedData.splitAddress.vtc}, `}
+                          {verifiedData.splitAddress.dist && `${verifiedData.splitAddress.dist}, `}
+                          {verifiedData.splitAddress.state && `${verifiedData.splitAddress.state} `}
+                          {verifiedData.splitAddress.pincode && `- ${verifiedData.splitAddress.pincode}`}
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
-            )}
+            </details>
           </div>
-
-          {/* Action Button */}
-          <button
-            className="w-full mt-8 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-            onClick={() => {
-              console.log("Proceeding with verified data");
-            }}
-          >
-            Proceed to Check-In
-          </button>
         </div>
       </div>
     </div>

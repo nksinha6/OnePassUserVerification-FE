@@ -62,7 +62,6 @@ const UserDetails = () => {
 
     /* ---------------- SELFIE ---------------- */
     const selfie =
-      normalizeBase64Image(selfieResp?.image) ||
       normalizeBase64Image(guestSelfie?.image) ||
       normalizeBase64Image(rawSelfie) ||
       "";
@@ -87,7 +86,7 @@ const UserDetails = () => {
               <img
                 src={user.selfie || LogoImage}
                 alt="User"
-                className="w-full h-full object-cover scale-110"
+                className="w-full h-full object-cover scale-125"
               />
             </div>
 

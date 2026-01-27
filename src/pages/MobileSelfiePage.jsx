@@ -7,14 +7,15 @@ import {
   persistAadhaarVerify,
 } from "../services/aadhaarService";
 import { ROUTES } from "@/constants/ui";
-import { useCamera } from "@/contexts/CameraContext";
 
 /* 🔹 Single source of truth */
 const OVAL_WIDTH = 260;
 const OVAL_HEIGHT = 360;
 
 /* 🔹 Generate new verification ID for Face Match */
-const generateVerificationId = () => crypto.randomUUID();
+const generateVerificationId = () => {
+  return crypto.randomUUID();
+};
 
 function MobileSelfiePage() {
   const videoRef = useRef(null);
@@ -24,39 +25,46 @@ function MobileSelfiePage() {
   const [aadhaarData, setAadhaarData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { streamRef, stopCamera } = useCamera();
-  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(window.location.search);
+  const vIdFromUrl = queryParams.get("verification_id");
+  const rIdFromUrl = queryParams.get("reference_id") || queryParams.get("referenceId");
 
   const digilockerResponse = JSON.parse(
-    sessionStorage.getItem("digilockerResponse"),
+    sessionStorage.getItem("digilockerResponse") || "{}"
   );
-  console.log("📦 DigiLocker Response:", digilockerResponse);
 
-  // 🔹 Used ONLY for Aadhaar fetch
-  const verificationId = digilockerResponse?.verification_id;
-  const referenceId = digilockerResponse?.reference_id;
-  const phoneCode = digilockerResponse?.countryCode;
+  console.log("📦 DigiLocker Response:", digilockerResponse);
+  console.log("📍 URL Params:", { vIdFromUrl, rIdFromUrl });
+
+  // 🔹 Used ONLY for Aadhaar fetch - prioritize URL parameters
+  const verificationId = vIdFromUrl || digilockerResponse?.verification_id;
+  const referenceId = rIdFromUrl || digilockerResponse?.reference_id;
+  const phoneCode = digilockerResponse?.countryCode || "91";
   const phoneNumber = digilockerResponse?.phoneNumber;
 
   const AADHAAR_STORAGE_KEY = "aadhaarData";
   const SELFIE_STORAGE_KEY = "capturedSelfie";
+
+  const navigate = useNavigate();
 
   /* ---------------- FETCH AADHAAR DATA ---------------- */
   useEffect(() => {
     const fetchAadhaarData = async () => {
       try {
         setIsLoading(true);
+        console.log("🔄 Fetching Aadhaar data...");
 
         const data = await getAadhaarData(
           verificationId,
           referenceId,
           phoneCode,
-          phoneNumber,
+          phoneNumber
         );
 
         setAadhaarData(data);
         localStorage.setItem(AADHAAR_STORAGE_KEY, JSON.stringify(data));
         sessionStorage.setItem(AADHAAR_STORAGE_KEY, JSON.stringify(data));
+
         console.log("✅ Aadhaar data fetched successfully", data);
       } catch (error) {
         console.error("❌ Failed to fetch Aadhaar data", error);
@@ -70,10 +78,27 @@ function MobileSelfiePage() {
 
   /* ---------------- CAMERA ---------------- */
   useEffect(() => {
-    if (streamRef.current && videoRef.current) {
-      videoRef.current.srcObject = streamRef.current;
-      videoRef.current.play();
-    }
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+        });
+
+        videoRef.current.srcObject = stream;
+        console.log("📷 Camera started");
+      } catch (error) {
+        console.error("❌ Camera permission denied", error);
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
+        console.log("🛑 Camera stopped");
+      }
+    };
   }, []);
 
   /* ---------------- HELPERS ---------------- */
@@ -81,12 +106,9 @@ function MobileSelfiePage() {
     const arr = dataUrl.split(",");
     const mime = arr[0].match(/:(.*?);/)[1];
     const bstr = atob(arr[1]);
-    const u8arr = new Uint8Array(bstr.length);
-
-    for (let i = 0; i < bstr.length; i++) {
-      u8arr[i] = bstr.charCodeAt(i);
-    }
-
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
     return new File([u8arr], filename, { type: mime });
   };
 
@@ -109,6 +131,7 @@ function MobileSelfiePage() {
     const selfieDataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
     sessionStorage.setItem(SELFIE_STORAGE_KEY, selfieDataUrl);
+    console.log("💾 Selfie stored in sessionStorage");
 
     if (!aadhaarData?.photo_link) {
       console.error("❌ Aadhaar photo missing");
@@ -124,44 +147,58 @@ function MobileSelfiePage() {
       const selfieFile = dataUrlToFile(selfieDataUrl, "selfie.jpg");
       const aadhaarFile = dataUrlToFile(
         `data:image/jpeg;base64,${aadhaarData.photo_link}`,
-        "aadhaar.jpg",
+        "aadhaar.jpg"
       );
+
+      console.log("📤 Calling Face Match API...");
 
       const result = await matchFace(
         faceMatchVerificationId,
         selfieFile,
         aadhaarFile,
-        0.75,
+        0.75
       );
+
       console.log("📸 Face Match Result:", result);
 
       if (result.face_match_result === "YES") {
         console.log("✅ MATCH ✔ Face verified");
         setMatchResult("MATCH ✔");
 
-        await persistGuestSelfie(phoneCode, phoneNumber, selfieFile);
+        try {
+          const persistSelfieResponse = await persistGuestSelfie(
+            phoneCode,
+            phoneNumber,
+            selfieFile
+          );
+          console.log("✅ Selfie saved successfully");
+          sessionStorage.setItem(
+            "selfiePersistResponse",
+            JSON.stringify(persistSelfieResponse)
+          );
 
-        const country = aadhaarData?.split_address?.country;
+          const country = aadhaarData?.split_address?.country;
 
-        const aadhaarVerifyResponse = await persistAadhaarVerify(
-          aadhaarData?.uid,
-          phoneCode,
-          phoneNumber,
-          aadhaarData?.name,
-          aadhaarData?.gender,
-          aadhaarData?.dob,
-          country === "India" ? "Indian" : country,
-          aadhaarData?.split_address ?? {},
-        );
+          const aadhaarVerifyResponse = await persistAadhaarVerify(
+            phoneCode,
+            phoneNumber,
+            aadhaarData?.name,
+            aadhaarData?.gender,
+            aadhaarData?.dob,
+            country === "India" ? "Indian" : country
+          );
+          console.log("✅ Aadhaar verification saved");
+          sessionStorage.setItem(
+            "aadhaarVerified",
+            JSON.stringify(aadhaarVerifyResponse)
+          );
 
-        sessionStorage.setItem(
-          "aadhaarVerified",
-          JSON.stringify(aadhaarVerifyResponse),
-        );
-
-        stopCamera();
-        navigate(ROUTES.SUCCESS, { replace: true });
+          navigate(ROUTES.SUCCESS, { replace: true });
+        } catch (error) {
+          console.error("❌ Failed to persist selfie / Aadhaar verify", error);
+        }
       } else {
+        console.error("❌ NO MATCH");
         setMatchResult("NO MATCH ❌");
       }
     } catch (error) {
@@ -179,26 +216,53 @@ function MobileSelfiePage() {
         <video
           ref={videoRef}
           autoPlay
-          muted
           playsInline
-          webkit-playsinline="true"
+          muted
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* iOS + Android SAFE OVAL OVERLAY */}
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-            style={{
-              width: `${OVAL_WIDTH}px`,
-              height: `${OVAL_HEIGHT}px`,
-              borderRadius: "50%",
-              boxShadow: "0 0 0 9999px rgba(0,0,0,0.7)", // 👈 single dark layer
-              border: "2px solid white",
-              background: "transparent",
-            }}
+        {/* Blur Mask */}
+        <svg
+          className="absolute inset-0 z-10 pointer-events-none"
+          width="100%"
+          height="100%"
+          viewBox="0 0 375 667"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <mask id="outerBlurMask">
+              <rect width="100%" height="100%" fill="white" />
+              <ellipse
+                cx="187.5"
+                cy="333.5"
+                rx={OVAL_WIDTH / 2}
+                ry={OVAL_HEIGHT / 2}
+                fill="black"
+              />
+            </mask>
+          </defs>
+
+          <foreignObject width="100%" height="100%" mask="url(#outerBlurMask)">
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                background: "rgba(0,0,0,0.74)",
+                backdropFilter: "blur(5.9px)",
+              }}
+            />
+          </foreignObject>
+
+          <ellipse
+            cx="187.5"
+            cy="333.5"
+            rx={OVAL_WIDTH / 2}
+            ry={OVAL_HEIGHT / 2}
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
           />
-        </div>
+        </svg>
 
         {/* Header */}
         <div className="absolute top-6 w-full text-center z-20">
@@ -227,9 +291,8 @@ function MobileSelfiePage() {
         {/* Result */}
         {matchResult && (
           <div
-            className={`absolute top-24 left-1/2 -translate-x-1/2 z-20 font-bold ${
-              matchResult.includes("MATCH") ? "text-green-400" : "text-red-400"
-            }`}
+            className={`absolute top-24 left-1/2 -translate-x-1/2 z-20 font-bold ${matchResult.includes("MATCH") ? "text-green-400" : "text-red-400"
+              }`}
           >
             {matchResult}
           </div>

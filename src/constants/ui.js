@@ -43,20 +43,6 @@ export const UI_TEXT = {
 
   // Loader Text
   LOADER_TEXT: "Loading...",
-
-  FACE_MATCH_INTRO: {
-    TITLE: "Complete Your Verification",
-    DESCRIPTION:
-      "Next, you will click a picture of your face using your phone’s front camera.",
-    ENSURE_TITLE: "Please ensure:",
-    CONDITIONS: [
-      "You are in a well-lit place",
-      "Your face is clearly visible",
-      "No masks, hats, or glasses",
-    ],
-    CTA_TAKE_SELFIE: "Take a Selfie",
-    CAMERA_PERMISSION_ERROR: "Please allow camera access to continue.",
-  },
 };
 
 export const FORM_CONFIG = {
@@ -78,6 +64,7 @@ export const ROUTES = {
   SELFIE: "/selfie",
   SUCCESS: "/success",
   USER_DETAILS: "/user-details",
-  FACE_MATCH_INTRO: "/face-match-intro",
+  VERIFICATION: "/verification",
+  CHECKIN_STATUS: "/checkinstatus",
   // Add other routes here as you create them
 };

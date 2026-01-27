@@ -9,9 +9,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
-  // ✅ Use mode to set base for dev vs prod
-  base: mode === "development" ? "/" : "/user/",
+export default defineConfig({
+  base: "/", 
   plugins: [
     react({
       babel: {
@@ -28,6 +27,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: true, // allow access from network
     allowedHosts: ["all", "f9114aa96710.ngrok-free.app"],
+
     proxy: {
       "/api": {
         target: "https://whale-app-tcfko.ondigitalocean.app", // Your backend URL
@@ -36,4 +36,4 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-}));
+});

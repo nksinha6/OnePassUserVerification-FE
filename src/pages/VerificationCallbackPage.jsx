@@ -21,9 +21,10 @@ const VerificationCallbackPage = () => {
         // Get URL parameters
         const queryParams = new URLSearchParams(window.location.search);
         const vIdFromUrl = queryParams.get("verification_id");
-        const rIdFromUrl = queryParams.get("reference_id") || queryParams.get("referenceId");
+        const rIdFromUrl = queryParams.get("reference_id") || queryParams.get("referenceId") || queryParams.get("ref_id");
 
         console.log("📊 URL Params:", { vIdFromUrl, rIdFromUrl });
+        console.log("🔍 All URL params:", Array.from(queryParams.entries()));
 
         // Get DigiLocker session data
         const digilockerSessionData = JSON.parse(
@@ -34,18 +35,31 @@ const VerificationCallbackPage = () => {
         );
 
         console.log("📦 DigiLocker Session Data:", digilockerSessionData);
+        console.log("📦 DigiLocker Response:", digilockerResponse);
 
         const verificationId = vIdFromUrl || digilockerSessionData?.verification_id;
-        const referenceId = rIdFromUrl || digilockerSessionData?.reference_id;
+        let referenceId = rIdFromUrl || digilockerSessionData?.reference_id;
         const phoneNumber = digilockerSessionData?.phone;
         const email = digilockerSessionData?.email;
         const phoneCode = "91";
 
-        if (!verificationId || !referenceId || !phoneNumber) {
+        if (!verificationId || !phoneNumber) {
+          console.error("Missing verification ID or phone number", { verificationId, phoneNumber });
           throw new Error("Missing required parameters for verification");
         }
 
-        console.log("🔄 Fetching Aadhaar data...");
+        // If reference_id is not available, use verification_id as fallback
+        if (!referenceId) {
+          console.warn("⚠️ Reference ID not found in URL or session, using verification_id as fallback");
+          referenceId = verificationId;
+        }
+
+        console.log("🔄 Fetching Aadhaar data with:", {
+          verificationId,
+          referenceId,
+          phoneCode,
+          phoneNumber,
+        });
 
         // Fetch Aadhaar data
         const aadhaarData = await getAadhaarData(

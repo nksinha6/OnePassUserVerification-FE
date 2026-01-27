@@ -1,3 +1,4 @@
+// src/constants/config.js
 // API Base URL (using proxy)
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -16,6 +17,8 @@ export const API_ENDPOINTS = {
   FACE_MATCH: "/faceverification/match",
   PERSIST_SELFIE: "/guest/persist/selfie",
   PERSIST_AADHAAR_UPDATE: "/guest/persist/aadhaar/update",
+  UPDATE_EMAIL: "/guest/persist/email/update",
+  PROPERTY_BY_ID: "/HotelPropertyRead/property_by_id",
 };
 
 // Storage Keys (only what we need)

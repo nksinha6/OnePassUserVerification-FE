@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+// src/pages/LoginPage.js
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import PhoneEntrySection from "@/components/PhoneEntrySection";
 import OTPEntrySection from "@/components/OTPEntrySection";
@@ -13,13 +14,11 @@ import { UI_TEXT, ROUTES } from "@/constants/ui";
 import {
   verifyDigilockerAccount,
   createDigilockerUrl,
-} from "@/services/digilockerService"; // ✅ REQUIRED
+} from "@/services/digilockerService";
 import { loginService, verifyOtpService } from "@/services/authService";
 import LogoImage from "@/assets/images/1pass_logo.jpg";
 
 const LoginPage = () => {
-  const { phone } = useParams(); // e.g. 91-9876543210
-
   const [otpSent, setOtpSent] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [apiError, setApiError] = useState("");
@@ -28,26 +27,16 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // 🔹 Generate random verification ID (unchanged)
+  // Generate proper UUID format verification ID
   const generateVerificationId = () => {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    for (let i = 0; i < 16; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   };
 
-  // ✅ AUTO-FILL PHONE FROM URL (NEW)
-  useEffect(() => {
-    if (phone) {
-      const normalized = phone.replace("-", "");
-      setPhoneNumber(`+${normalized}`); // +919876543210
-    }
-  }, [phone]);
-
-  /* ---------------- PHONE SUBMIT ---------------- */
+  // Handle phone number submission
   const handlePhoneSubmit = async (phone) => {
     setPhoneNumber(phone);
     setIsLoading(true);
@@ -72,23 +61,20 @@ const LoginPage = () => {
     setApiError("");
   };
 
-  /* ---------------- OTP SUBMIT ---------------- */
+  // Handle OTP submission - FIXED VERSION
   const handleOtpSubmit = async (enteredOtp) => {
     setIsLoading(true);
     setApiError("");
 
     try {
-      const { countryCode, phoneNumber: phoneNo } =
-        parsePhoneNumber(phoneNumber);
+      const { countryCode, phoneNumber: phoneNo } = parsePhoneNumber(phoneNumber);
       const cleanCountryCode = countryCode.replace("+", "");
 
-      const response = await verifyOtpService(
-        cleanCountryCode,
-        phoneNo,
-        enteredOtp,
-      );
+      // Verify OTP
+      const response = await verifyOtpService(cleanCountryCode, phoneNo, enteredOtp);
 
       if (response.verificationStatus === true) {
+        // Get guest data
         const guest = await getGuestByPhone(cleanCountryCode, phoneNo);
 
         if (!guest) {
@@ -96,78 +82,99 @@ const LoginPage = () => {
           return;
         }
 
-        if (guest) {
-          sessionStorage.setItem("guest", JSON.stringify(guest));
-        }
+        // Store guest data
+        sessionStorage.setItem("guest", JSON.stringify(guest));
 
-        const guestSelfie = await getGuestSelfieByPhone(
-          cleanCountryCode,
-          phoneNo,
-        );
-
+        // Get guest selfie if exists
+        const guestSelfie = await getGuestSelfieByPhone(cleanCountryCode, phoneNo);
         if (guestSelfie) {
           sessionStorage.setItem("guestSelfie", JSON.stringify(guestSelfie));
         }
 
-        await login({ phone: phoneNumber, guestData: guest });
+        // Login user
+        await login({
+          phone: phoneNumber,
+          guestData: guest,
+        });
 
-        /* 🔹 DIGILOCKER FLOW MOVED HERE */
+        // Check verification status
         if (guest.verificationStatus === "pending") {
+          console.log("🚀 Starting DigiLocker flow for pending verification...");
+
+          // Generate verification ID
           const verificationId = generateVerificationId();
+          console.log("📝 Generated Verification ID:", verificationId);
 
-          const digilockerResponse = await verifyDigilockerAccount(
-            verificationId,
-            phoneNo,
-          );
+          try {
+            // Step 1: Verify DigiLocker account
+            const digilockerResponse = await verifyDigilockerAccount(verificationId, phoneNo);
+            console.log("✅ DigiLocker verification response:", digilockerResponse);
 
-          sessionStorage.setItem(
-            "digilockerResponse",
-            JSON.stringify({
+            // Determine user flow based on status
+            let userFlow = "signin";
+            if (digilockerResponse.status === "ACCOUNT_EXISTS") userFlow = "signin";
+            if (digilockerResponse.status === "ACCOUNT_NOT_FOUND") userFlow = "signup";
+
+            // Get verification ID from response or use generated one
+            const finalVerificationId = digilockerResponse.verification_id || verificationId;
+
+            // Store in session
+            sessionStorage.setItem("digilockerResponse", JSON.stringify({
               ...digilockerResponse,
               phoneNumber: phoneNo,
               countryCode: cleanCountryCode,
-            }),
-          );
+              verificationId_initial: verificationId,
+              finalVerificationId: finalVerificationId,
+              userFlow: userFlow
+            }));
 
-          let userFlow;
-          if (digilockerResponse.status === "ACCOUNT_EXISTS")
-            userFlow = "signin";
-          if (digilockerResponse.status === "ACCOUNT_NOT_FOUND")
-            userFlow = "signup";
+            // Step 2: Create DigiLocker URL
+            console.log("🔗 Creating DigiLocker URL...");
 
-          const digilockerVerificationId =
-            digilockerResponse.verification_id || verificationId;
+            // Use current origin for redirect URL
+            const baseUrl = window.location.origin;
+            const redirectUrl = `${baseUrl}${ROUTES.CHECKIN_STATUS}`;
 
-          const redirectUrl = `https://authiko.in/user${ROUTES.FACE_MATCH_INTRO}`;
+            console.log("📍 Redirect URL:", redirectUrl);
+            console.log("👤 User Flow:", userFlow);
+            console.log("🆔 Final Verification ID:", finalVerificationId);
 
-          const digilockerUrlResponse = await createDigilockerUrl(
-            digilockerVerificationId,
-            ["AADHAAR"],
-            redirectUrl,
-            userFlow,
-          );
+            const digilockerUrlResponse = await createDigilockerUrl(
+              finalVerificationId,
+              ["AADHAAR"],
+              redirectUrl,
+              userFlow
+            );
 
-          sessionStorage.setItem(
-            "digilockerRedirectUrl",
-            digilockerUrlResponse.url,
-          );
+            console.log("✅ DigiLocker URL response:", digilockerUrlResponse);
 
-          sessionStorage.setItem(
-            "digilockerSessionData",
-            JSON.stringify({
-              verification_id: digilockerVerificationId,
+            if (!digilockerUrlResponse || !digilockerUrlResponse.url) {
+              throw new Error("No URL received from DigiLocker service");
+            }
+
+            // Store session data
+            sessionStorage.setItem("digilockerRedirectUrl", digilockerUrlResponse.url);
+            sessionStorage.setItem("digilockerSessionData", JSON.stringify({
+              verification_id: finalVerificationId,
               userFlow,
               phone: phoneNo,
               status: digilockerResponse.status,
               url: digilockerUrlResponse.url,
-            }),
-          );
+            }));
 
-          // 🔹 REDIRECT TO DIGILOCKER
-          window.location.href = digilockerUrlResponse.url;
-          return;
+            // Redirect to DigiLocker
+            console.log("🔄 Redirecting to DigiLocker:", digilockerUrlResponse.url);
+            window.location.href = digilockerUrlResponse.url;
+            return;
+
+          } catch (digiError) {
+            console.error("❌ DigiLocker flow error:", digiError);
+            setApiError(`DigiLocker setup failed: ${digiError.message}`);
+            return;
+          }
         }
 
+        // If already verified, go to user details
         if (guest.verificationStatus === "verified") {
           navigate(ROUTES.USER_DETAILS, { replace: true });
           return;
@@ -178,13 +185,14 @@ const LoginPage = () => {
         setApiError(UI_TEXT.OTP_INVALID_ERROR || "Invalid OTP");
       }
     } catch (error) {
+      console.error("❌ OTP verification error:", error);
       setApiError(error.message || "OTP verification failed");
     } finally {
       setIsLoading(false);
     }
   };
 
-  /* ---------------- RESEND OTP ---------------- */
+  // Handle OTP resend
   const handleResendOtp = async () => {
     if (isLoading) return;
 
@@ -192,8 +200,7 @@ const LoginPage = () => {
     setApiError("");
 
     try {
-      const { countryCode, phoneNumber: phoneNo } =
-        parsePhoneNumber(phoneNumber);
+      const { countryCode, phoneNumber: phoneNo } = parsePhoneNumber(phoneNumber);
       const cleanCountryCode = countryCode.replace("+", "");
 
       await loginService(cleanCountryCode, phoneNo);
@@ -204,16 +211,26 @@ const LoginPage = () => {
     }
   };
 
+  const handleSignUp = () => {
+    console.log("Navigate to signup page");
+  };
+
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="min-h-screen bg-white border border-gray-200 flex flex-col">
         <div className="m-3 border border-gray-200 rounded-2xl overflow-hidden flex flex-col flex-1">
-          <LoginHeader logo={LogoImage} />
+          <LoginHeader logo={LogoImage} onSignUp={handleSignUp} />
 
           <main className="p-6 flex flex-col flex-1">
             {apiError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-600">{apiError}</p>
+                <button
+                  onClick={() => setApiError("")}
+                  className="text-xs text-red-500 underline mt-1"
+                >
+                  Clear Error
+                </button>
               </div>
             )}
 

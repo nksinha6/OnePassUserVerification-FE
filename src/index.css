@@ -112,3 +112,165 @@
     stroke-dashoffset: 0;
   }
 }
+
+/* -- Verification Flow Styles (Updated to match photo) -- */
+.verification-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  height: 100%;
+  background: white;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.stepper-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f1f5f9;
+  position: relative;
+}
+
+.step-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.step-indicator-bar {
+  position: absolute;
+  top: -1.5rem;
+  left: 10%;
+  right: 10%;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+}
+
+.step-indicator-bar.active {
+  background: #f59e0b;
+  /* Yellow/Orange from photo */
+}
+
+.status-text-new {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-text-new.active {
+  color: #1e293b;
+}
+
+.verification-content {
+  padding: 2.5rem 2rem;
+}
+
+.verification-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.verification-subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin-bottom: 2.5rem;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.info-icon {
+  color: #1e293b;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+}
+
+.info-text {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.email-field {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #fcfdfe;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.email-field::placeholder {
+  color: #cbd5e1;
+}
+
+.terms-footer {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.terms-link {
+  color: #64748b;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.proceed-btn-dark {
+  width: 100%;
+  padding: 1rem;
+  background: #1b3631;
+  /* Dark green from layout theme */
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.proceed-btn-dark:hover {
+  background: #142a26;
+  transform: translateY(-2px);
+}

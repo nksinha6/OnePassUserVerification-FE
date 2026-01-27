@@ -1,6 +1,6 @@
 // src/pages/LoginPage.js
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import PhoneEntrySection from "@/components/PhoneEntrySection";
 import OTPEntrySection from "@/components/OTPEntrySection";
@@ -16,6 +16,9 @@ import {
   createDigilockerUrl,
 } from "@/services/digilockerService";
 import { loginService, verifyOtpService } from "@/services/authService";
+import { API_ENDPOINTS } from "@/constants/config";
+import apiClient from "@/services/apiClient";
+import { getVerificationData } from "@/services/verificationService";
 import LogoImage from "@/assets/images/1pass_logo.jpg";
 
 const LoginPage = () => {
@@ -23,9 +26,33 @@ const LoginPage = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [propertyName, setPropertyName] = useState("");
+  const [email, setEmail] = useState("");
+  const [isFromLink, setIsFromLink] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { mobile, propertyId } = useParams();
+
+  useEffect(() => {
+    if (mobile && propertyId) {
+      setIsFromLink(true);
+      // Format mobile: assuming mobile is like "91-9106471172"
+      const formattedMobile = `+91${mobile.replace('91-', '')}`;
+      setPhoneNumber(formattedMobile);
+      fetchProperty(propertyId);
+    }
+  }, [mobile, propertyId]);
+
+  const fetchProperty = async (id) => {
+    try {
+      const response = await apiClient.get(`${API_ENDPOINTS.PROPERTY_BY_ID}?propertyId=${id}`);
+      setPropertyName(response.data.name || response.data.propertyName || "Property");
+    } catch (error) {
+      console.error("Failed to fetch property", error);
+      setPropertyName("Property");
+    }
+  };
 
   // Generate proper UUID format verification ID
   const generateVerificationId = () => {
@@ -37,7 +64,7 @@ const LoginPage = () => {
   };
 
   // Handle phone number submission
-  const handlePhoneSubmit = async (phone) => {
+  const handlePhoneSubmit = async (phone, email) => {
     setPhoneNumber(phone);
     setIsLoading(true);
     setApiError("");
@@ -57,6 +84,7 @@ const LoginPage = () => {
   };
 
   const handleEditPhone = () => {
+    if (isFromLink) return; // Don't allow editing if from link
     setOtpSent(false);
     setApiError("");
   };
@@ -99,9 +127,23 @@ const LoginPage = () => {
 
         // Check verification status
         if (guest.verificationStatus === "pending") {
-          console.log("🚀 Starting DigiLocker flow for pending verification...");
+          console.log("🚀 Checking for existing verified data...");
 
-          // Generate verification ID
+          // Check if user has already completed verification
+          const existingVerificationData = getVerificationData(phoneNo);
+
+          if (existingVerificationData) {
+            console.log("✅ Found existing verified data, skipping DigiLocker...");
+            sessionStorage.setItem(
+              "verifiedAadhaarData",
+              JSON.stringify(existingVerificationData)
+            );
+            navigate(ROUTES.CHECKINS, { replace: true });
+            return;
+          }
+
+          console.log("🚀 No existing data, starting DigiLocker flow for pending verification...");
+
           const verificationId = generateVerificationId();
           console.log("📝 Generated Verification ID:", verificationId);
 
@@ -219,7 +261,7 @@ const LoginPage = () => {
     <div className="w-full max-w-md mx-auto">
       <div className="min-h-screen bg-white border border-gray-200 flex flex-col">
         <div className="m-3 border border-gray-200 rounded-2xl overflow-hidden flex flex-col flex-1">
-          <LoginHeader logo={LogoImage} onSignUp={handleSignUp} />
+          <LoginHeader logo={LogoImage} title={isFromLink ? "Verify Identity" : UI_TEXT.PAGE_TITLE} onSignUp={handleSignUp} />
 
           <main className="p-6 flex flex-col flex-1">
             {apiError && (
@@ -240,6 +282,10 @@ const LoginPage = () => {
                 onSubmit={handlePhoneSubmit}
                 isLoading={isLoading}
                 apiError={apiError}
+                isFromLink={isFromLink}
+                propertyName={propertyName}
+                email={email}
+                setEmail={setEmail}
               />
             ) : (
               <OTPEntrySection

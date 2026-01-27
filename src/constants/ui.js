@@ -64,7 +64,8 @@ export const ROUTES = {
   SELFIE: "/selfie",
   SUCCESS: "/success",
   USER_DETAILS: "/user-details",
-  VERIFICATION: "/verification",
+  VERIFICATION: "/verify",
+  VERIFICATION_CALLBACK: "/verify-callback",
   CHECKIN_STATUS: "/checkinstatus",
   // Add other routes here as you create them
 };

@@ -17,27 +17,44 @@ export const getAadhaarData = async (
   phoneNumber
 ) => {
   try {
-    const response = await apiClient.post(API_ENDPOINTS.AADHAAR_DATA, {
+    // Build minimal payload - verificationId is the key identifier
+    const payload = {
       verificationId,
-      referenceId,
       phoneCountryCode: phoneCode,
       phoneNumber,
-    });
+    };
 
-    console.log(response.data);
+    // Only include referenceId if it's explicitly provided and not the same as verificationId
+    if (referenceId && referenceId !== verificationId) {
+      payload.referenceId = referenceId;
+    }
+
+    console.log("🔍 Fetching Aadhaar data with payload:", payload);
+    console.log("📤 Sending to endpoint:", API_ENDPOINTS.AADHAAR_DATA);
+
+    const response = await apiClient.post(API_ENDPOINTS.AADHAAR_DATA, payload);
+
+    console.log("✅ Aadhaar data received:", response.data);
     return response.data;
   } catch (error) {
+    console.error("❌ Error fetching Aadhaar data:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      payload: error.config?.data,
+    });
+
     if (error.response?.status === 404) {
-      console.log("Aadhaar data not found");
+      console.log("⚠️ Aadhaar data not found (404)");
       return null;
     }
     if (error.response?.status === 400) {
-      throw new Error("Invalid verification or reference ID");
+      const msg = error.response?.data?.message || error.response?.data?.error || 'Unknown error';
+      throw new Error(`[400] Invalid parameters: ${msg}`);
     }
     if (error.response?.status === 401) {
-      throw new Error("Authentication failed");
+      throw new Error("Authentication failed (401)");
     }
-    console.error("Error fetching Aadhaar data:", error);
     throw error;
   }
 };

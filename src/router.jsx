@@ -13,8 +13,8 @@ import PreviousCheckins from "@/pages/PreviousCheckins";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SuccessPage from "@/pages/SuccessPage";
 import UserDetails from "./pages/UserDetails";
-import VerificationFlow from "./pages/VerificationFlow";
-import CheckInStatusPage from "./pages/CheckInStatusPage";
+import VerificationPage from "./pages/VerificationPage";
+import VerificationCallbackPage from "./pages/VerificationCallbackPage";
 
 import { ROUTES } from "@/constants/ui";
 
@@ -35,10 +35,13 @@ const Router = () => {
           {/* All routes that use AppLayout */}
           <Route element={<LayoutWrapper />}>
             {/* Login page - accessible to everyone */}
-            <Route path={ROUTES.LOGIN} element={<VerificationFlow />} />
-            <Route path="/user/login/:mobileId/:propertyId" element={<VerificationFlow />} />
-            <Route path={ROUTES.VERIFICATION} element={<VerificationFlow />} />
-            <Route path={ROUTES.CHECKIN_STATUS} element={<CheckInStatusPage />} />
+            <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+            <Route path={`${ROUTES.LOGIN}/:mobile/:propertyId`} element={<VerificationPage />} />
+            
+            {/* Verification routes */}
+            <Route path={ROUTES.VERIFICATION} element={<VerificationPage />} />
+            <Route path={ROUTES.VERIFICATION_CALLBACK} element={<VerificationCallbackPage />} />
+
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>
               <Route path={ROUTES.CHECKINS} element={<PreviousCheckins />} />

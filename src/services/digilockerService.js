@@ -37,6 +37,27 @@ export const verifyDigilockerAccount = async (verificationId, mobileNumber) => {
 };
 
 /**
+ * Update guest email
+ */
+export const updateGuestEmail = async (phoneCountryCode, phoneNumber, email) => {
+  try {
+    console.log("📧 Updating guest email...");
+
+    const response = await apiClient.post(API_ENDPOINTS.UPDATE_EMAIL, {
+      phoneCountryCode,
+      phoneNumber,
+      email,
+    });
+
+    console.log("✅ Email updated successfully");
+    return response.data;
+  } catch (error) {
+    console.error("❌ Failed to update email:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Failed to update email");
+  }
+};
+
+/**
  * Create DigiLocker URL for document sharing
  * @param {string} verificationId - Unique verification ID
  * @param {string[]} documentRequested - Array of requested documents (e.g., ["AADHAAR"])
@@ -52,23 +73,60 @@ export const createDigilockerUrl = async (
   userFlow
 ) => {
   try {
-    const response = await apiClient.post(API_ENDPOINTS.DIGILOCKER_CREATE_URL, {
+    console.log("🔗 Creating DigiLocker URL with params:", {
       verification_id: verificationId,
       document_requested: documentRequested,
       redirect_url: redirectUrl,
       user_flow: userFlow,
     });
+
+    // Try standard payload first
+    const payload = {
+      verification_id: verificationId,
+      document_requested: documentRequested,
+      redirect_url: redirectUrl,
+      user_flow: userFlow,
+    };
+
+    console.log("📤 Sending request to:", API_ENDPOINTS.DIGILOCKER_CREATE_URL);
+    console.log("📦 Payload:", JSON.stringify(payload, null, 2));
+
+    const response = await apiClient.post(API_ENDPOINTS.DIGILOCKER_CREATE_URL, payload);
+    
+    console.log("✅ DigiLocker URL created successfully:", response.data);
     return response.data;
   } catch (error) {
+    console.error("❌ DigiLocker create URL error:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data,
+      },
+    });
+
+    // If first attempt fails, log more details for debugging
+    if (error.response) {
+      console.error("🔍 Backend Error Details:", error.response.data);
+    }
+
     // Handle specific error cases
     if (error.response?.status === 400) {
-      throw new Error("Invalid request parameters");
+      const msg = error.response.data?.message || "Invalid request parameters";
+      throw new Error(`[400] ${msg}`);
+    }
+
+    if (error.response?.status === 404) {
+      throw new Error(`[404] DigiLocker endpoint not found. Check API URL: ${API_ENDPOINTS.DIGILOCKER_CREATE_URL}`);
     }
 
     if (error.response?.status === 422) {
       const errorMessage =
         error.response.data?.message || "Invalid document type or parameters";
-      throw new Error(errorMessage);
+      throw new Error(`[422] ${errorMessage}`);
     }
 
     if (error.response?.status === 500) {
@@ -76,7 +134,6 @@ export const createDigilockerUrl = async (
     }
 
     // Log and rethrow for other errors
-    console.error("DigiLocker create URL error:", error);
-    throw new Error("Failed to create DigiLocker URL. Please try again.");
+    throw new Error(error.response?.data?.message || "Failed to create DigiLocker URL. Please try again.");
   }
 };

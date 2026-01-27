@@ -179,3 +179,34 @@ export const persistAadhaarVerify = async (
     throw error;
   }
 };
+
+/**
+ * Persist complete Aadhaar update with full payload
+ * POST: /api/guest/persist/aadhaar/update
+ *
+ * @param {object} aadhaarPayload - Complete Aadhaar payload
+ * @returns {Promise}
+ */
+export const persistAadhaarUpdate = async (aadhaarPayload) => {
+  try {
+    const response = await apiClient.post(
+      API_ENDPOINTS.PERSIST_AADHAAR_UPDATE,
+      aadhaarPayload
+    );
+
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 400) {
+      throw new Error("Invalid Aadhaar update data");
+    }
+    if (error.response?.status === 401) {
+      throw new Error("Unauthorized request");
+    }
+    if (error.response?.status === 404) {
+      throw new Error("Guest not found");
+    }
+
+    console.error("Error persisting Aadhaar update:", error);
+    throw error;
+  }
+};

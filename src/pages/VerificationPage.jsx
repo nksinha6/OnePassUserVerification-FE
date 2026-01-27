@@ -101,6 +101,7 @@ const VerificationPage = () => {
       // Step 3: Create DigiLocker URL
       const baseUrl = window.location.origin;
       const redirectUrl = `${baseUrl}${ROUTES.VERIFICATION_CALLBACK}`;
+      console.log("🔹 Base URL:", baseUrl, redirectUrl);
 
       console.log("📍 Redirect URL:", redirectUrl);
       console.log("👤 User Flow:", userFlow);

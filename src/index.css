@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --max-width-content: 430px;
+  --max-width-content: 500px;
 
   --color-brand: #1b3631;
   --color-primary: #2563eb;

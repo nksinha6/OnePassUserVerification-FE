@@ -176,8 +176,8 @@ const VerificationFlow = () => {
             if (!userFlow) userFlow = "signin"; // Fallback
 
             // Use dynamic origin for redirect URL
-            const base = import.meta.env.BASE_URL.replace(/\/$/, ""); // remove trailing slash
-            const redirectUrl = `${window.location.origin}${import.meta.env.BASE_URL}${ROUTES.CHECKIN_STATUS}`;
+           const base = import.meta.env.BASE_URL.replace(/\/$/, ""); // remove trailing slash
+           const redirectUrl = `${window.location.origin}${base}${ROUTES.CHECKIN_STATUS}`;
 
             console.log("Starting DigiLocker flow:", {
                 verificationId: digilockerVerificationId,

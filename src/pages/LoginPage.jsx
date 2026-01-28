@@ -12,11 +12,13 @@ import LoginHeader from "@/components/LoginHeader";
 import LogoImage from "@/assets/images/1pass_logo.jpg";
 
 const VerificationFlow = () => {
-    const { mobileId, propertyId } = useParams();
+    const { mobile, propertyId } = useParams(); // Changed from mobileId to mobile
     const location = useLocation();
     const navigate = useNavigate();
-    const isDirectLogin = location.pathname === "/login" || location.pathname === ROUTES.LOGIN;
-    const isLoginWithParams = location.pathname.includes("/login/");
+    
+    // Check if we're on the base login page or login with parameters
+    const isBaseLoginPage = location.pathname === "/login" || location.pathname === ROUTES.LOGIN;
+    const hasUrlParams = mobile && propertyId;
 
     const [step, setStep] = useState(1);
     const [email, setEmail] = useState("");
@@ -24,7 +26,7 @@ const VerificationFlow = () => {
     const [countryCode, setCountryCode] = useState("91");
     const [emailError, setEmailError] = useState("");
     const [mobileError, setMobileError] = useState("");
-    const [propertyInfo, setPropertyInfo] = useState({ name: "[Property Name]" });
+    const [propertyInfo, setPropertyInfo] = useState({ name: "" });
     const [loading, setLoading] = useState(false);
 
     // Generate proper UUID format verification ID
@@ -46,33 +48,48 @@ const VerificationFlow = () => {
         return `+${num}`;
     };
 
-    const getParsedPhone = () => {
-        if (mobileId) {
-            const parts = mobileId.split("-");
+    // Get phone number based on URL or manual input
+    const getPhoneNumber = () => {
+        if (hasUrlParams) {
+            // Mobile from URL: format like "91-9106471172"
+            const parts = mobile.split("-");
             if (parts.length === 2) {
                 return { country: parts[0], number: parts[1] };
             }
-            return { country: "91", number: mobileId };
+            return { country: "91", number: mobile };
         }
         return { country: countryCode, number: manualMobile.slice(countryCode.length) };
     };
 
-    const displayMobile = mobileId ? formatMobile(mobileId) : (manualMobile ? `+${manualMobile}` : "[Mobile Number]");
+    // Display mobile number for info card
+    const getDisplayMobile = () => {
+        if (hasUrlParams) {
+            return formatMobile(mobile);
+        }
+        return manualMobile ? `+${manualMobile}` : "[Mobile Number]";
+    };
 
     useEffect(() => {
         const fetchProperty = async () => {
             try {
-                const pId = propertyId || "2";
-                const response = await apiClient.get(API_ENDPOINTS.PROPERTY_BY_ID, {
-                    params: { propertyId: pId }
-                });
-                if (response.data && response.data.name) {
-                    setPropertyInfo(response.data);
+                if (propertyId) {
+                    const response = await apiClient.get(API_ENDPOINTS.PROPERTY_BY_ID, {
+                        params: { propertyId }
+                    });
+                    if (response.data && response.data.name) {
+                        setPropertyInfo(response.data);
+                    } else {
+                        setPropertyInfo({ name: "" });
+                    }
+                } else {
+                    setPropertyInfo({ name: "" });
                 }
             } catch (error) {
                 console.error("Error fetching property:", error);
+                setPropertyInfo({ name: "" });
             }
         };
+        
         fetchProperty();
     }, [propertyId]);
 
@@ -90,8 +107,8 @@ const VerificationFlow = () => {
             valid = false;
         }
 
-        // Only validate mobile if it's direct login (no parameters)
-        if (isDirectLogin && (!manualMobile || manualMobile.length < 10)) {
+        // Only validate mobile if it's base login page (no URL parameters)
+        if (isBaseLoginPage && !hasUrlParams && (!manualMobile || manualMobile.length < 10)) {
             setMobileError("Please enter a valid mobile number");
             valid = false;
         }
@@ -99,7 +116,7 @@ const VerificationFlow = () => {
         if (!valid) return;
 
         setLoading(true);
-        const { country, number } = getParsedPhone();
+        const { country, number } = getPhoneNumber();
 
         try {
             // 1. Update Email/Phone persist
@@ -219,6 +236,8 @@ const VerificationFlow = () => {
     };
 
     const renderStep1 = () => {
+        const displayMobileNumber = getDisplayMobile();
+        
         return (
             <div className="flex flex-col items-center w-full">
                 {/* Stepper */}
@@ -265,7 +284,7 @@ const VerificationFlow = () => {
                         </div>
                         <div>
                             <p className="text-gray-700 text-sm leading-relaxed">
-                                Enter your email to continue secure check-in at <span className="font-semibold text-gray-900">{propertyInfo.name}</span>.
+                                Enter your email to continue secure check-in {propertyInfo.name ? <span>at <span className="font-semibold text-gray-900">{propertyInfo.name}</span></span> : ""}.
                             </p>
                         </div>
                     </div>
@@ -276,7 +295,7 @@ const VerificationFlow = () => {
                         </div>
                         <div>
                             <p className="text-gray-700 text-sm leading-relaxed">
-                                Your identity will be verified via DigiLocker using <span className="font-semibold text-gray-900">{displayMobile}</span>.
+                                Your identity will be verified via DigiLocker using <span className="font-semibold text-gray-900">{displayMobileNumber}</span>.
                             </p>
                         </div>
                     </div>
@@ -293,8 +312,8 @@ const VerificationFlow = () => {
                     </div>
                 </div>
 
-                {/* Phone Input (Only for direct login - no parameters) */}
-                {isDirectLogin && !mobileId && (
+                {/* Phone Input (Only for base login page without URL parameters) */}
+                {isBaseLoginPage && !hasUrlParams && (
                     <div className="w-full mb-6">
                         <div className="relative">
                             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
@@ -389,7 +408,7 @@ const VerificationFlow = () => {
                     <button
                         onClick={startDigilockerFlow}
                         disabled={loading}
-                        className="w-full shadow-sm  flex items-center p-5 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors"
+                        className="w-full shadow-sm flex items-center p-5 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors"
                     >
                         <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
                             <Shield className="text-blue-600 w-7 h-7" />

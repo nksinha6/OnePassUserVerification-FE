@@ -14,6 +14,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import SuccessPage from "@/pages/SuccessPage";
 import UserDetails from "./pages/UserDetails";
 import VerificationCallbackPage from "./pages/VerificationCallbackPage";
+import CheckinStatusPage from "./pages/CheckInStatusPage";
 
 import { ROUTES } from "@/constants/ui";
 

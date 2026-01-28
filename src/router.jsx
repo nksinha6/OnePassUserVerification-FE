@@ -41,6 +41,7 @@ const Router = () => {
             
             {/* Verification routes */}
             <Route path={ROUTES.VERIFICATION_CALLBACK} element={<VerificationCallbackPage />} />
+            <Route path={ROUTES.CHECKIN_STATUS} element={<CheckinStatusPage />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>

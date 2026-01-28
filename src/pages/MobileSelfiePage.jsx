@@ -211,7 +211,7 @@ function MobileSelfiePage() {
   /* ---------------- UI ---------------- */
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="relative w-[380px] h-[750px] bg-black rounded-3xl overflow-hidden shadow-2xl">
+      <div className="relative w-95 h-187.5 bg-black rounded-3xl overflow-hidden shadow-2xl">
         {/* Camera */}
         <video
           ref={videoRef}

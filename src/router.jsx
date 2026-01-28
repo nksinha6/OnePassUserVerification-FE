@@ -17,6 +17,8 @@ import VerificationCallbackPage from "./pages/VerificationCallbackPage";
 
 import { ROUTES } from "@/constants/ui";
 
+const basename = import.meta.env.DEV ? "/" : "/user";
+
 // Create a wrapper component that uses AppLayout
 const LayoutWrapper = () => {
   return (
@@ -28,7 +30,7 @@ const LayoutWrapper = () => {
 
 const Router = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AuthProvider>
         <Routes>
           {/* All routes that use AppLayout */}

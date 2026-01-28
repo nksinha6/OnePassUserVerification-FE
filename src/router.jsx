@@ -13,7 +13,6 @@ import PreviousCheckins from "@/pages/PreviousCheckins";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import SuccessPage from "@/pages/SuccessPage";
 import UserDetails from "./pages/UserDetails";
-import VerificationPage from "./pages/VerificationPage";
 import VerificationCallbackPage from "./pages/VerificationCallbackPage";
 
 import { ROUTES } from "@/constants/ui";
@@ -36,10 +35,9 @@ const Router = () => {
           <Route element={<LayoutWrapper />}>
             {/* Login page - accessible to everyone */}
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-            <Route path={`${ROUTES.LOGIN}/:mobile/:propertyId`} element={<VerificationPage />} />
+            <Route path={`${ROUTES.LOGIN}/:mobile/:propertyId`} element={<LoginPage />} />
             
             {/* Verification routes */}
-            <Route path={ROUTES.VERIFICATION} element={<VerificationPage />} />
             <Route path={ROUTES.VERIFICATION_CALLBACK} element={<VerificationCallbackPage />} />
 
             {/* Protected routes - require authentication */}

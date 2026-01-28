@@ -1,307 +1,420 @@
-// src/pages/LoginPage.js
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import PhoneEntrySection from "@/components/PhoneEntrySection";
-import OTPEntrySection from "@/components/OTPEntrySection";
-import LoginHeader from "@/components/LoginHeader";
-import {
-  getGuestByPhone,
-  parsePhoneNumber,
-  getGuestSelfieByPhone,
-} from "@/services/guestService";
-import { UI_TEXT, ROUTES } from "@/constants/ui";
-import {
-  verifyDigilockerAccount,
-  createDigilockerUrl,
-} from "@/services/digilockerService";
-import { loginService, verifyOtpService } from "@/services/authService";
-import { API_ENDPOINTS } from "@/constants/config";
+// src/pages/VerificationFlow.js
+import React, { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { Mail, Lock, Shield, Clock, ChevronRight, ArrowRight } from "lucide-react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import apiClient from "@/services/apiClient";
-import { getVerificationData } from "@/services/verificationService";
+import { API_ENDPOINTS } from "@/constants/config";
+import { ROUTES } from "@/constants/ui";
+import { verifyDigilockerAccount, createDigilockerUrl } from "@/services/digilockerService";
+import LoginHeader from "@/components/LoginHeader";
 import LogoImage from "@/assets/images/1pass_logo.jpg";
 
-const LoginPage = () => {
-  const [otpSent, setOtpSent] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [apiError, setApiError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [propertyName, setPropertyName] = useState("");
-  const [email, setEmail] = useState("");
-  const [isFromLink, setIsFromLink] = useState(false);
+const VerificationFlow = () => {
+    const { mobileId, propertyId } = useParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isDirectLogin = location.pathname === "/login" || location.pathname === ROUTES.LOGIN;
+    const isLoginWithParams = location.pathname.includes("/login/");
 
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const { mobile, propertyId } = useParams();
+    const [step, setStep] = useState(1);
+    const [email, setEmail] = useState("");
+    const [manualMobile, setManualMobile] = useState("");
+    const [countryCode, setCountryCode] = useState("91");
+    const [emailError, setEmailError] = useState("");
+    const [mobileError, setMobileError] = useState("");
+    const [propertyInfo, setPropertyInfo] = useState({ name: "[Property Name]" });
+    const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (mobile && propertyId) {
-      setIsFromLink(true);
-      // Format mobile: assuming mobile is like "91-9106471172"
-      const formattedMobile = `+91${mobile.replace('91-', '')}`;
-      setPhoneNumber(formattedMobile);
-      fetchProperty(propertyId);
-    }
-  }, [mobile, propertyId]);
-
-  const fetchProperty = async (id) => {
-    try {
-      const response = await apiClient.get(`${API_ENDPOINTS.PROPERTY_BY_ID}?propertyId=${id}`);
-      setPropertyName(response.data.name || response.data.propertyName || "Property");
-    } catch (error) {
-      console.error("Failed to fetch property", error);
-      setPropertyName("Property");
-    }
-  };
-
-  // Generate proper UUID format verification ID
-  const generateVerificationId = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  };
-
-  // Handle phone number submission
-  const handlePhoneSubmit = async (phone, email) => {
-    setPhoneNumber(phone);
-    setIsLoading(true);
-    setApiError("");
-
-    try {
-      const phoneForApi = phone.replace(/^\+91/, "");
-      const { countryCode } = parsePhoneNumber(phone);
-      const cleanCountryCode = countryCode.replace("+", "");
-
-      await loginService(cleanCountryCode, phoneForApi);
-      setOtpSent(true);
-    } catch (error) {
-      setApiError(error.message || "Failed to send OTP");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEditPhone = () => {
-    if (isFromLink) return; // Don't allow editing if from link
-    setOtpSent(false);
-    setApiError("");
-  };
-
-  // Handle OTP submission - FIXED VERSION
-  const handleOtpSubmit = async (enteredOtp) => {
-    setIsLoading(true);
-    setApiError("");
-
-    try {
-      const { countryCode, phoneNumber: phoneNo } = parsePhoneNumber(phoneNumber);
-      const cleanCountryCode = countryCode.replace("+", "");
-
-      // Verify OTP
-      const response = await verifyOtpService(cleanCountryCode, phoneNo, enteredOtp);
-
-      if (response.verificationStatus === true) {
-        // Get guest data
-        const guest = await getGuestByPhone(cleanCountryCode, phoneNo);
-
-        if (!guest) {
-          setApiError("No account found. Please complete signup.");
-          return;
-        }
-
-        // Store guest data
-        sessionStorage.setItem("guest", JSON.stringify(guest));
-
-        // Get guest selfie if exists
-        const guestSelfie = await getGuestSelfieByPhone(cleanCountryCode, phoneNo);
-        if (guestSelfie) {
-          sessionStorage.setItem("guestSelfie", JSON.stringify(guestSelfie));
-        }
-
-        // Login user
-        await login({
-          phone: phoneNumber,
-          guestData: guest,
+    // Generate proper UUID format verification ID
+    const generateVerificationId = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
         });
+    };
 
-        // Check verification status
-        if (guest.verificationStatus === "pending") {
-          console.log("🚀 Checking for existing verified data...");
+    // Format mobile number for display
+    const formatMobile = (num) => {
+        if (!num) return "[Mobile Number]";
+        const cleanNum = num.replace(/-/g, "");
+        if (cleanNum.length === 12) {
+            return `+${cleanNum.slice(0, 2)} ${cleanNum.slice(2, 7)} ${cleanNum.slice(7)}`;
+        }
+        return `+${num}`;
+    };
 
-          // Check if user has already completed verification
-          const existingVerificationData = getVerificationData(phoneNo);
+    const getParsedPhone = () => {
+        if (mobileId) {
+            const parts = mobileId.split("-");
+            if (parts.length === 2) {
+                return { country: parts[0], number: parts[1] };
+            }
+            return { country: "91", number: mobileId };
+        }
+        return { country: countryCode, number: manualMobile.slice(countryCode.length) };
+    };
 
-          if (existingVerificationData) {
-            console.log("✅ Found existing verified data, skipping DigiLocker...");
-            sessionStorage.setItem(
-              "verifiedAadhaarData",
-              JSON.stringify(existingVerificationData)
-            );
-            navigate(ROUTES.CHECKINS, { replace: true });
-            return;
-          }
+    const displayMobile = mobileId ? formatMobile(mobileId) : (manualMobile ? `+${manualMobile}` : "[Mobile Number]");
 
-          console.log("🚀 No existing data, starting DigiLocker flow for pending verification...");
+    useEffect(() => {
+        const fetchProperty = async () => {
+            try {
+                const pId = propertyId || "2";
+                const response = await apiClient.get(API_ENDPOINTS.PROPERTY_BY_ID, {
+                    params: { propertyId: pId }
+                });
+                if (response.data && response.data.name) {
+                    setPropertyInfo(response.data);
+                }
+            } catch (error) {
+                console.error("Error fetching property:", error);
+            }
+        };
+        fetchProperty();
+    }, [propertyId]);
 
-          const verificationId = generateVerificationId();
-          console.log("📝 Generated Verification ID:", verificationId);
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
 
-          try {
-            // Step 1: Verify DigiLocker account
-            const digilockerResponse = await verifyDigilockerAccount(verificationId, phoneNo);
-            console.log("✅ DigiLocker verification response:", digilockerResponse);
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
+        let valid = true;
 
-            // Determine user flow based on status
-            let userFlow = "signin";
-            if (digilockerResponse.status === "ACCOUNT_EXISTS") userFlow = "signin";
-            if (digilockerResponse.status === "ACCOUNT_NOT_FOUND") userFlow = "signup";
+        if (!validateEmail(email)) {
+            setEmailError("Please enter a valid email address");
+            valid = false;
+        }
 
-            // Get verification ID from response or use generated one
-            const finalVerificationId = digilockerResponse.verification_id || verificationId;
+        // Only validate mobile if it's direct login (no parameters)
+        if (isDirectLogin && (!manualMobile || manualMobile.length < 10)) {
+            setMobileError("Please enter a valid mobile number");
+            valid = false;
+        }
 
-            // Store in session
-            sessionStorage.setItem("digilockerResponse", JSON.stringify({
-              ...digilockerResponse,
-              phoneNumber: phoneNo,
-              countryCode: cleanCountryCode,
-              verificationId_initial: verificationId,
-              finalVerificationId: finalVerificationId,
-              userFlow: userFlow
+        if (!valid) return;
+
+        setLoading(true);
+        const { country, number } = getParsedPhone();
+
+        try {
+            // 1. Update Email/Phone persist
+            await apiClient.put(API_ENDPOINTS.UPDATE_EMAIL, {
+                phoneCountryCode: country,
+                phoneNumber: number,
+                emailAddress: email
+            });
+
+            // Update session storage
+            sessionStorage.setItem("guest", JSON.stringify({
+                phoneNumber: number,
+                countryCode: country,
+                email: email
             }));
 
-            // Step 2: Create DigiLocker URL
-            console.log("🔗 Creating DigiLocker URL...");
+            // 2. Prepare DigiLocker Account
+            const verificationId = generateVerificationId();
+            console.log("Generated verificationId:", verificationId);
 
-            // Use current origin for redirect URL
-            const baseUrl = window.location.origin;
-            const redirectUrl = `${baseUrl}${ROUTES.CHECKIN_STATUS}`;
+            const digilockerResponse = await verifyDigilockerAccount(verificationId, number);
 
-            console.log("📍 Redirect URL:", redirectUrl);
-            console.log("👤 User Flow:", userFlow);
-            console.log("🆔 Final Verification ID:", finalVerificationId);
+            console.log("DigiLocker response:", digilockerResponse);
+
+            sessionStorage.setItem("digilockerResponse", JSON.stringify({
+                ...digilockerResponse,
+                phoneNumber: number,
+                countryCode: country,
+                verificationId_initial: verificationId
+            }));
+
+            setEmailError("");
+            setMobileError("");
+            setStep(2);
+        } catch (error) {
+            console.error("Error in flow initiation:", error);
+            setEmailError(`Failed to initiate verification: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const startDigilockerFlow = async () => {
+        setLoading(true);
+        try {
+            const digilockerRes = JSON.parse(sessionStorage.getItem("digilockerResponse"));
+            if (!digilockerRes) throw new Error("Verification data missing");
+
+            const { countryCode, phoneNumber } = digilockerRes;
+
+            // Use verification_id from response OR the initial one
+            const digilockerVerificationId = digilockerRes.verification_id || digilockerRes.verificationId_initial;
+
+            let userFlow;
+            if (digilockerRes.status === "ACCOUNT_EXISTS") userFlow = "signin";
+            if (digilockerRes.status === "ACCOUNT_NOT_FOUND") userFlow = "signup";
+            if (!userFlow) userFlow = "signin"; // Fallback
+
+            // Use dynamic origin for redirect URL
+            const redirectUrl = `${window.location.origin}${ROUTES.CHECKIN_STATUS}`;
+
+            console.log("Starting DigiLocker flow:", {
+                verificationId: digilockerVerificationId,
+                redirectUrl,
+                userFlow
+            });
 
             const digilockerUrlResponse = await createDigilockerUrl(
-              finalVerificationId,
-              ["AADHAAR"],
-              redirectUrl,
-              userFlow
+                digilockerVerificationId,
+                ["AADHAAR"],
+                redirectUrl,
+                userFlow
             );
 
-            console.log("✅ DigiLocker URL response:", digilockerUrlResponse);
+            console.log("DigiLocker URL response:", digilockerUrlResponse);
 
-            if (!digilockerUrlResponse || !digilockerUrlResponse.url) {
-              throw new Error("No URL received from DigiLocker service");
+            if (!digilockerUrlResponse.url) {
+                throw new Error("No URL received from DigiLocker");
             }
 
-            // Store session data
+            // Store redirect for session consistency
             sessionStorage.setItem("digilockerRedirectUrl", digilockerUrlResponse.url);
             sessionStorage.setItem("digilockerSessionData", JSON.stringify({
-              verification_id: finalVerificationId,
-              userFlow,
-              phone: phoneNo,
-              status: digilockerResponse.status,
-              url: digilockerUrlResponse.url,
+                verification_id: digilockerVerificationId,
+                userFlow,
+                phone: phoneNumber,
+                status: digilockerRes.status,
+                url: digilockerUrlResponse.url,
             }));
 
             // Redirect to DigiLocker
-            console.log("🔄 Redirecting to DigiLocker:", digilockerUrlResponse.url);
             window.location.href = digilockerUrlResponse.url;
-            return;
-
-          } catch (digiError) {
-            console.error("❌ DigiLocker flow error:", digiError);
-            setApiError(`DigiLocker setup failed: ${digiError.message}`);
-            return;
-          }
+        } catch (error) {
+            console.error("Error starting DigiLocker:", error);
+            alert(`Failed to start DigiLocker: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
+    };
 
-        // If already verified, go to user details
-        if (guest.verificationStatus === "verified") {
-          navigate(ROUTES.USER_DETAILS, { replace: true });
-          return;
-        }
+    // Main render function
+    const renderContent = () => {
+        return (
+            <div className="w-full mx-auto">
+                <div className="min-h-screen bg-white border border-gray-200 flex flex-col">
+                    <div className="m-3 border border-gray-200 rounded-2xl overflow-hidden flex flex-col flex-1">
+                        {/* Header */}
+                        <LoginHeader logo={LogoImage} title="Verify Identity" />
 
-        setApiError("Unable to proceed. Please contact support.");
-      } else {
-        setApiError(UI_TEXT.OTP_INVALID_ERROR || "Invalid OTP");
-      }
-    } catch (error) {
-      console.error("❌ OTP verification error:", error);
-      setApiError(error.message || "OTP verification failed");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+                        <main className="p-6 flex flex-col flex-1">
+                            {step === 1 ? renderStep1() : renderStep2()}
+                        </main>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
-  // Handle OTP resend
-  const handleResendOtp = async () => {
-    if (isLoading) return;
+    const renderStep1 = () => {
+        return (
+            <div className="flex flex-col items-center w-full">
+                {/* Stepper */}
+                <div className="w-full mb-10">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex flex-col items-center relative">
+                            <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mb-2 relative z-10">
+                                <span className="text-white font-semibold text-sm">1</span>
+                            </div>
+                            <span className="text-sm font-semibold text-yellow-600">ENTER EMAIL</span>
+                        </div>
+                        <div className="flex-1 h-0.5 bg-gray-200 mx-2"></div>
+                        <div className="flex flex-col items-center relative">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mb-2 relative z-10">
+                                <span className="text-gray-500 font-semibold text-sm">2</span>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-400">ID VERIFICATION</span>
+                        </div>
+                        <div className="flex-1 h-0.5 bg-gray-200 mx-2"></div>
+                        <div className="flex flex-col items-center relative">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mb-2 relative z-10">
+                                <span className="text-gray-500 font-semibold text-sm">3</span>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-400">COMPLETE VERIFICATION</span>
+                        </div>
+                    </div>
+                </div>
 
-    setIsLoading(true);
-    setApiError("");
+                {/* Title */}
+                <h2 className="text-2xl font-bold text-gray-900 mb-3 text-center w-full">
+                    Verify Identity
+                </h2>
+                
+                {/* Subtitle */}
+                <p className="text-gray-600 mb-10 text-center w-full text-base leading-relaxed px-2">
+                    Enter your email to securely complete your identity verification
+                </p>
 
-    try {
-      const { countryCode, phoneNumber: phoneNo } = parsePhoneNumber(phoneNumber);
-      const cleanCountryCode = countryCode.replace("+", "");
+                {/* Info Cards */}
+                <div className="w-full space-y-6 mb-10">
+                    <div className="flex items-start">
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4 shrink-0 border border-gray-200">
+                            <span className="text-xl">📧</span>
+                        </div>
+                        <div>
+                            <p className="text-gray-700 text-sm leading-relaxed">
+                                Enter your email to continue secure check-in at <span className="font-semibold text-gray-900">{propertyInfo.name}</span>.
+                            </p>
+                        </div>
+                    </div>
 
-      await loginService(cleanCountryCode, phoneNo);
-    } catch (error) {
-      setApiError(error.message || "Failed to resend OTP");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+                    <div className="flex items-start">
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4 shrink-0 border border-gray-200">
+                            <span className="text-xl">🛡️</span>
+                        </div>
+                        <div>
+                            <p className="text-gray-700 text-sm leading-relaxed">
+                                Your identity will be verified via DigiLocker using <span className="font-semibold text-gray-900">{displayMobile}</span>.
+                            </p>
+                        </div>
+                    </div>
 
-  const handleSignUp = () => {
-    console.log("Navigate to signup page");
-  };
+                    <div className="flex items-start">
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4 shrink-0 border border-gray-200">
+                            <span className="text-xl">⏰</span>
+                        </div>
+                        <div>
+                            <p className="text-gray-700 text-sm leading-relaxed">
+                                Your data will be stored for 1 year, as required by local law.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-  return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="min-h-screen bg-white border border-gray-200 flex flex-col">
-        <div className="m-3 border border-gray-200 rounded-2xl overflow-hidden flex flex-col flex-1">
-          <LoginHeader logo={LogoImage} title={isFromLink ? "Verify Identity" : UI_TEXT.PAGE_TITLE} onSignUp={handleSignUp} />
+                {/* Phone Input (Only for direct login - no parameters) */}
+                {isDirectLogin && !mobileId && (
+                    <div className="w-full mb-6">
+                        <div className="relative">
+                            <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                </svg>
+                            </div>
+                            <PhoneInput
+                                country={"in"}
+                                value={manualMobile}
+                                onChange={(phone, country) => {
+                                    setManualMobile(phone);
+                                    setCountryCode(country.dialCode);
+                                    if (mobileError) setMobileError("");
+                                }}
+                                containerClass="react-tel-input"
+                                inputClass="form-control !w-full !h-16 !pl-14 !pr-4 !rounded-2xl !border-2 !border-gray-200 !focus:outline-none !focus:border-blue-500 !bg-white !text-gray-900 !text-lg"
+                                buttonClass="!border-none !bg-transparent !rounded-l-xl"
+                                placeholder="Mobile Number"
+                                inputProps={{
+                                    name: "phone",
+                                    required: true,
+                                }}
+                            />
+                        </div>
+                        {mobileError && (
+                            <p className="text-red-500 text-xs mt-2 ml-4">{mobileError}</p>
+                        )}
+                    </div>
+                )}
 
-          <main className="p-6 flex flex-col flex-1">
-            {apiError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{apiError}</p>
+                {/* Email Input */}
+                <div className="w-full mb-8">
+                    <div className="relative">
+                        <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <input
+                            type="email"
+                            className="w-full h-16 pl-14 pr-6 rounded-2xl border-2 border-gray-200 focus:outline-none focus:border-blue-500 bg-white text-gray-900 text-lg disabled:opacity-50 placeholder-gray-400 transition-colors"
+                            placeholder="Email Address"
+                            value={email}
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                if (emailError) setEmailError("");
+                            }}
+                            required
+                            disabled={loading}
+                        />
+                    </div>
+                    {emailError && (
+                        <p className="text-red-500 text-xs mt-2 ml-4">{emailError}</p>
+                    )}
+                </div>
+
+                {/* Terms */}
+                <div className="w-full mb-10 px-2">
+                    <p className="text-xs text-gray-500 text-center leading-relaxed">
+                        By providing your email, you agree to our{" "}
+                        <a href="#" className="underline text-blue-600 hover:text-blue-700 font-medium">Terms and Conditions</a> and{" "}
+                        <a href="#" className="underline text-blue-600 hover:text-blue-700 font-medium">Privacy Policy</a>
+                    </p>
+                </div>
+
+                {/* Proceed Button */}
+                <div className="w-full">
+                    <button
+                        onClick={handleFormSubmit}
+                        type="button"
+                        disabled={loading}
+                        className="w-full h-16 bg-[#1b3634] rounded-2xl text-white font-bold text-lg flex items-center justify-center disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98]"
+                    >
+                        <span className="mr-3">{loading ? "Processing..." : "Proceed Securely"}</span>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    const renderStep2 = () => {
+        return (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                <h1 className="text-2xl font-bold text-gray-900 mb-3 text-center">Identity Proof</h1>
+                <p className="text-gray-600 mb-10 text-center text-base">Securely verify your documents through DigiLocker</p>
+
+                <div className="space-y-4 mb-10">
+                    <button
+                        onClick={startDigilockerFlow}
+                        disabled={loading}
+                        className="w-full shadow-sm  flex items-center p-5 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors"
+                    >
+                        <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <Shield className="text-blue-600 w-7 h-7" />
+                        </div>
+                        <div className="text-left grow ml-4">
+                            <div className="font-bold text-slate-800">DigiLocker</div>
+                            <div className="text-xs text-slate-500">Fast & Secure document sharing</div>
+                        </div>
+                        <ChevronRight className="text-slate-300 w-5 h-5" />
+                    </button>
+                </div>
+
                 <button
-                  onClick={() => setApiError("")}
-                  className="text-xs text-red-500 underline mt-1"
+                    onClick={startDigilockerFlow}
+                    disabled={loading}
+                    className="w-full h-16 bg-[#1b3634] rounded-2xl text-white font-bold text-lg flex items-center justify-center disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl active:scale-[0.98]"
                 >
-                  Clear Error
+                    <span className="mr-3">{loading ? "Please wait..." : "Continue to DigiLocker"}</span>
+                    <ArrowRight className="w-6 h-6" />
                 </button>
-              </div>
-            )}
+            </div>
+        );
+    };
 
-            {!otpSent ? (
-              <PhoneEntrySection
-                initialPhone={phoneNumber}
-                onSubmit={handlePhoneSubmit}
-                isLoading={isLoading}
-                apiError={apiError}
-                isFromLink={isFromLink}
-                propertyName={propertyName}
-                email={email}
-                setEmail={setEmail}
-              />
-            ) : (
-              <OTPEntrySection
-                phoneNumber={phoneNumber}
-                onEditPhone={handleEditPhone}
-                onVerify={handleOtpSubmit}
-                onResend={handleResendOtp}
-                isLoading={isLoading}
-                apiError={apiError}
-              />
-            )}
-          </main>
-        </div>
-      </div>
-    </div>
-  );
+    return renderContent();
 };
 
-export default LoginPage;
+export default VerificationFlow;

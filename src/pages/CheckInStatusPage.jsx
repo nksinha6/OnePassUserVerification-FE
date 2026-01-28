@@ -105,8 +105,8 @@ const CheckInStatusPage = () => {
                 <h2 className="text-xl font-bold text-slate-900 mb-2">Verification Error</h2>
                 <p className="text-slate-500 mb-8">{error}</p>
                 <button
-                    onClick={() => navigate(ROUTES.VERIFICATION)}
-                    className="w-full py-3 bg-[#1b3631] text-white rounded-xl font-bold"
+                    onClick={() => navigate(ROUTES.LOGIN)}
+                    className="w-full py-3 bg-brand text-white rounded-xl font-bold"
                 >
                     Try Again
                 </button>
@@ -121,8 +121,8 @@ const CheckInStatusPage = () => {
                 <h2 className="text-xl font-bold text-slate-900 mb-2">Complete Verification</h2>
                 <p className="text-slate-500 mb-8">Please complete your DigiLocker identity verification to see your status.</p>
                 <button
-                    onClick={() => navigate(ROUTES.VERIFICATION)}
-                    className="w-full py-3 bg-[#1b3631] text-white rounded-xl font-bold"
+                    onClick={() => navigate(ROUTES.LOGIN)}
+                    className="w-full py-3 bg-brand text-white rounded-xl font-bold"
                 >
                     Return to Verification
                 </button>
@@ -167,7 +167,7 @@ const CheckInStatusPage = () => {
                 <div className="mt-12 text-center pb-8">
                     <button
                         onClick={() => navigate(ROUTES.USER_DETAILS)}
-                        className="w-full py-4 bg-[#1b3631] text-white rounded-2xl font-bold transition-all hover:shadow-lg active:scale-[0.98]"
+                        className="w-full py-4 bg-brand text-white rounded-2xl font-bold transition-all hover:shadow-lg active:scale-[0.98]"
                     >
                         Continue to Profile
                     </button>

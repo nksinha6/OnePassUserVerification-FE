@@ -72,7 +72,6 @@ const CheckInStatusPage = () => {
         phoneNumber: pNum,
       });
 
-      /* 🔹 Fetch guest by phone (unchanged) */
       try {
         const guestData = await getGuestByPhone(pCode, pNum);
         if (guestData) {
@@ -109,7 +108,6 @@ const CheckInStatusPage = () => {
             ? "Indian"
             : data?.split_address?.country || "Indian";
 
-        /* 🔹 Aadhaar persist (ORIGINAL) */
         await persistAadhaarVerify(
           data?.uid,
           pCode,
@@ -121,7 +119,6 @@ const CheckInStatusPage = () => {
           data?.split_address ?? {},
         );
 
-        /* 🔹 NEW: Aadhaar image → persist as selfie (NO UI CHANGE) */
         try {
           const aadhaarBase64 =
             data?.photo_link || data?.image || data?.profile_image;

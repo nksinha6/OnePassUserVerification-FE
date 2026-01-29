@@ -4,9 +4,25 @@ import { ChevronLeft } from "lucide-react";
 import {
   getAadhaarData,
   persistAadhaarVerify,
+  persistGuestSelfie,
 } from "@/services/aadhaarService";
 import { getGuestByPhone } from "@/services/guestService";
 import { ROUTES } from "@/constants/ui";
+
+/* 🔹 NEW (LOGIC ONLY): base64 → File */
+const base64ToFile = (base64, filename = "aadhaar-selfie.jpg") => {
+  if (!base64) return null;
+
+  const arr = base64.split(",");
+  const mime = arr[0]?.match(/:(.*?);/)?.[1] || "image/jpeg";
+  const bstr = atob(arr[arr.length - 1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+
+  return new File([u8arr], filename, { type: mime });
+};
 
 const DetailRow = ({ label, value, isLast }) => (
   <div
@@ -56,21 +72,17 @@ const CheckInStatusPage = () => {
         phoneNumber: pNum,
       });
 
-      /* 🔹 NEW: Fetch Guest by Phone */
+      /* 🔹 Fetch guest by phone (unchanged) */
       try {
         const guestData = await getGuestByPhone(pCode, pNum);
-
         if (guestData) {
-          console.log("✅ Existing Guest Found:", guestData);
           sessionStorage.setItem("guest", JSON.stringify(guestData));
           setDisplayData((prev) => ({
             ...prev,
             email: guestData.email || guestData.emailId || "",
           }));
-        } else {
-          console.log("ℹ️ No guest found for this phone number");
         }
-      } catch (e) {
+      } catch {
         console.warn("Guest lookup failed silently");
       }
 
@@ -84,24 +96,43 @@ const CheckInStatusPage = () => {
 
         const data = await getAadhaarData(vId, rId, pCode, pNum);
 
-        if (data) {
-          setAadhaarData(data);
-          sessionStorage.setItem("aadhaarData", JSON.stringify(data));
-
-          const country = data?.split_address?.country || "Indian";
-
-          await persistAadhaarVerify(
-            data?.uid,
-            pCode,
-            pNum,
-            data?.name,
-            data?.gender,
-            data?.dob,
-            country === "India" ? "Indian" : country,
-            data?.split_address ?? {},
-          );
-        } else {
+        if (!data) {
           setError("Verification data not found. Please try again.");
+          return;
+        }
+
+        setAadhaarData(data);
+        sessionStorage.setItem("aadhaarData", JSON.stringify(data));
+
+        const country =
+          data?.split_address?.country === "India"
+            ? "Indian"
+            : data?.split_address?.country || "Indian";
+
+        /* 🔹 Aadhaar persist (ORIGINAL) */
+        await persistAadhaarVerify(
+          data?.uid,
+          pCode,
+          pNum,
+          data?.name,
+          data?.gender,
+          data?.dob,
+          country,
+          data?.split_address ?? {},
+        );
+
+        /* 🔹 NEW: Aadhaar image → persist as selfie (NO UI CHANGE) */
+        try {
+          const aadhaarBase64 =
+            data?.photo_link || data?.image || data?.profile_image;
+
+          const selfieFile = base64ToFile(aadhaarBase64);
+
+          if (selfieFile) {
+            await persistGuestSelfie(pCode, pNum, selfieFile);
+          }
+        } catch (e) {
+          console.warn("Selfie persist skipped", e);
         }
       } catch (err) {
         setError(err.message || "An error occurred during verification.");
@@ -143,7 +174,7 @@ const CheckInStatusPage = () => {
       </div>
     );
   }
-  // Default view if no data yet
+
   if (!aadhaarData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white p-6 text-center">

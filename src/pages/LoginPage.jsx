@@ -1,6 +1,6 @@
 // src/pages/VerificationFlow.js
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import {
   Mail,
   Lock,
@@ -242,7 +242,8 @@ const VerificationFlow = () => {
 
       // Use dynamic origin for redirect URL
       const base = import.meta.env.BASE_URL.replace(/\/$/, ""); // remove trailing slash
-      const redirectUrl = `${window.location.origin}${base}${ROUTES.CHECKIN_STATUS}`;
+      // const redirectUrl = `${window.location.origin}${base}${ROUTES.CHECKIN_STATUS}`;
+      const redirectUrl = "";
 
       console.log("Starting DigiLocker flow:", {
         verificationId: digilockerVerificationId,

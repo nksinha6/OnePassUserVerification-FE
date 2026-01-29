@@ -14,8 +14,11 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import SuccessPage from "@/pages/SuccessPage";
 import UserDetails from "./pages/UserDetails";
 import VerificationCallbackPage from "./pages/VerificationCallbackPage";
+import CheckinStatusPage from "./pages/CheckInStatusPage";
 
 import { ROUTES } from "@/constants/ui";
+
+const basename = import.meta.env.DEV ? "/" : "/user";
 
 // Create a wrapper component that uses AppLayout
 const LayoutWrapper = () => {
@@ -28,7 +31,7 @@ const LayoutWrapper = () => {
 
 const Router = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AuthProvider>
         <Routes>
           {/* All routes that use AppLayout */}
@@ -39,6 +42,7 @@ const Router = () => {
             
             {/* Verification routes */}
             <Route path={ROUTES.VERIFICATION_CALLBACK} element={<VerificationCallbackPage />} />
+            <Route path={ROUTES.CHECKIN_STATUS} element={<CheckinStatusPage />} />
 
             {/* Protected routes - require authentication */}
             <Route element={<ProtectedRoute />}>

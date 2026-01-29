@@ -5,6 +5,7 @@ import {
   getAadhaarData,
   persistAadhaarVerify,
 } from "@/services/aadhaarService";
+import { getGuestByPhone } from "@/services/guestService";
 import { ROUTES } from "@/constants/ui";
 
 const DetailRow = ({ label, value, isLast }) => (
@@ -29,23 +30,21 @@ const CheckInStatusPage = () => {
   const [displayData, setDisplayData] = useState({
     countryCode: "",
     phoneNumber: "",
+    email: "",
   });
 
   useEffect(() => {
     const processIDVerification = async () => {
-      // 🔹 Extract params from URL redirect
       const queryParams = new URLSearchParams(location.search);
       const vIdFromUrl = queryParams.get("verification_id");
       const rIdFromUrl =
         queryParams.get("reference_id") || queryParams.get("referenceId");
 
-      // 🔹 Load from session storage
       const storedDigi = JSON.parse(
         sessionStorage.getItem("digilockerResponse") || "{}",
       );
       const sessionGuest = JSON.parse(sessionStorage.getItem("guest") || "{}");
 
-      // Prioritize URL params for IDs
       const vId = vIdFromUrl || storedDigi.verification_id;
       const rId = rIdFromUrl || storedDigi.reference_id;
 
@@ -57,24 +56,38 @@ const CheckInStatusPage = () => {
         phoneNumber: pNum,
       });
 
+      /* 🔹 NEW: Fetch Guest by Phone */
+      try {
+        const guestData = await getGuestByPhone(pCode, pNum);
+
+        if (guestData) {
+          console.log("✅ Existing Guest Found:", guestData);
+          sessionStorage.setItem("guest", JSON.stringify(guestData));
+          setDisplayData((prev) => ({
+            ...prev,
+            email: guestData.email || guestData.emailId || "",
+          }));
+        } else {
+          console.log("ℹ️ No guest found for this phone number");
+        }
+      } catch (e) {
+        console.warn("Guest lookup failed silently");
+      }
+
       if (!vId || !rId) {
-        console.log("Waiting for verification IDs...", { vId, rId });
-        // If we don't have IDs yet, we might still be loading or just landed here
         setIsLoading(false);
         return;
       }
 
       try {
         setIsLoading(true);
-        // 1. Fetch Aadhaar Data using the reference-compliant service
+
         const data = await getAadhaarData(vId, rId, pCode, pNum);
-        console.log("User Aadhaar Data :- ", data);
 
         if (data) {
           setAadhaarData(data);
           sessionStorage.setItem("aadhaarData", JSON.stringify(data));
 
-          // 2. Persist Verification details to backend
           const country = data?.split_address?.country || "Indian";
 
           await persistAadhaarVerify(
@@ -87,12 +100,10 @@ const CheckInStatusPage = () => {
             country === "India" ? "Indian" : country,
             data?.split_address ?? {},
           );
-          console.log("✅ Identity verified and persisted successfully");
         } else {
           setError("Verification data not found. Please try again.");
         }
       } catch (err) {
-        console.error("❌ Identity Verification failed:", err);
         setError(err.message || "An error occurred during verification.");
       } finally {
         setIsLoading(false);
@@ -201,6 +212,7 @@ const CheckInStatusPage = () => {
               label="Phone"
               value={`+${displayData.countryCode} ${displayData.phoneNumber}`}
             />
+            <DetailRow label="Email" value={displayData.email || "N/A"} />
             <DetailRow
               label="City"
               value={

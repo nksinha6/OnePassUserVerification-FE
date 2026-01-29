@@ -9,7 +9,9 @@ import { ROUTES } from "@/constants/ui";
 
 const DetailRow = ({ label, value, isLast }) => (
   <div
-    className={`flex justify-between items-center py-1 ${!isLast ? "border-b border-slate-50 pb-4" : ""}`}
+    className={`flex justify-between items-center py-1 ${
+      !isLast ? "border-b border-slate-50 pb-4" : ""
+    }`}
   >
     <span className="text-[14px] text-slate-500 font-medium">{label}</span>
     <span className="text-[15px] font-bold text-slate-800">
@@ -85,7 +87,6 @@ const CheckInStatusPage = () => {
             country === "India" ? "Indian" : country,
             data?.split_address ?? {},
           );
-
           console.log("✅ Identity verified and persisted successfully");
         } else {
           setError("Verification data not found. Please try again.");
@@ -131,7 +132,6 @@ const CheckInStatusPage = () => {
       </div>
     );
   }
-
   // Default view if no data yet
   if (!aadhaarData) {
     return (
@@ -215,15 +215,6 @@ const CheckInStatusPage = () => {
               isLast
             />
           </div>
-        </div>
-
-        <div className="mt-12 text-center pb-8">
-          <button
-            onClick={() => navigate(ROUTES.USER_DETAILS)}
-            className="w-full py-4 bg-brand text-white rounded-2xl font-bold transition-all hover:shadow-lg active:scale-[0.98]"
-          >
-            Continue to Profile
-          </button>
         </div>
       </div>
     </div>

@@ -76,12 +76,6 @@ const CheckInStatusPage = () => {
           const country = data?.split_address?.country || "Indian";
 
           await persistAadhaarVerify(
-            // pCode,
-            // pNum,
-            // data.full_name || data.name || "N/A",
-            // data.gender || "N/A",
-            // data.dob || data.dateOfBirth || "N/A",
-            // country === "India" ? "Indian" : country,
             data?.uid,
             pCode,
             pNum,

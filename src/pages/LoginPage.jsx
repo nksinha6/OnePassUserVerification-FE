@@ -1,6 +1,6 @@
 // src/pages/VerificationFlow.js
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import {
   Mail,
   Lock,
@@ -18,18 +18,21 @@ import {
   verifyDigilockerAccount,
   createDigilockerUrl,
 } from "@/services/digilockerService";
+import { getGuestByPhone } from "@/services/guestService";
+
 import LoginHeader from "@/components/LoginHeader";
 import LogoImage from "@/assets/images/1pass_logo.jpg";
 
 const VerificationFlow = () => {
   const { mobile, propertyId } = useParams(); // Changed from mobileId to mobile
   const location = useLocation();
-  const navigate = useNavigate();
 
   // Check if we're on the base login page or login with parameters
   const isBaseLoginPage =
     location.pathname === "/login" || location.pathname === ROUTES.LOGIN;
   const hasUrlParams = mobile && propertyId;
+
+  const [emailLocked, setEmailLocked] = useState(false);
 
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
@@ -61,6 +64,33 @@ const VerificationFlow = () => {
     }
     return `+${num}`;
   };
+
+  useEffect(() => {
+    const fetchGuestIfExists = async () => {
+      if (!hasUrlParams) return;
+
+      try {
+        const { country, number } = getPhoneNumber();
+
+        const guest = await getGuestByPhone(country, number);
+        console.log(guest);
+
+        if (guest && guest.email) {
+          setEmail(guest.email); // 🔥 auto-fill email
+          setEmailLocked(true);
+
+          // Lock only if already verified
+          if (guest.verificationStatus === "verified") {
+            setEmailLocked(true);
+          }
+        }
+      } catch (err) {
+        console.error("Guest lookup failed:", err);
+      }
+    };
+
+    fetchGuestIfExists();
+  }, [hasUrlParams]);
 
   // Get phone number based on URL or manual input
   const getPhoneNumber = () => {
@@ -141,11 +171,13 @@ const VerificationFlow = () => {
 
     try {
       // 1. Update Email/Phone persist
-      await apiClient.put(API_ENDPOINTS.UPDATE_EMAIL, {
-        phoneCountryCode: country,
-        phoneNumber: number,
-        emailAddress: email,
-      });
+      if (!emailLocked) {
+        await apiClient.put(API_ENDPOINTS.UPDATE_EMAIL, {
+          phoneCountryCode: country,
+          phoneNumber: number,
+          emailAddress: email,
+        });
+      }
 
       // Update session storage
       sessionStorage.setItem(
@@ -210,7 +242,8 @@ const VerificationFlow = () => {
 
       // Use dynamic origin for redirect URL
       const base = import.meta.env.BASE_URL.replace(/\/$/, ""); // remove trailing slash
-      const redirectUrl = `${window.location.origin}${base}${ROUTES.CHECKIN_STATUS}`;
+      // const redirectUrl = `${window.location.origin}${base}${ROUTES.CHECKIN_STATUS}`;
+      const redirectUrl = "";
 
       console.log("Starting DigiLocker flow:", {
         verificationId: digilockerVerificationId,
@@ -281,49 +314,59 @@ const VerificationFlow = () => {
     return (
       <div className="flex flex-col items-center w-full">
         {/* Stepper */}
-        <div className="w-full mb-10">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex flex-col items-center relative">
-              <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mb-2 relative z-10">
+        <div className="w-full mb-6">
+          <div className="flex items-start justify-between">
+            {/* STEP 1 */}
+            <div className="flex flex-col items-center w-24 text-center">
+              <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mb-2">
                 <span className="text-white font-semibold text-sm">1</span>
               </div>
-              <span className="text-sm font-semibold text-yellow-600">
-                ENTER EMAIL
+              <span className="text-sm font-semibold text-yellow-600 leading-tight">
+                ENTER
+                <br />
+                EMAIL
               </span>
             </div>
-            <div className="flex-1 h-0.5 bg-gray-200 mx-2"></div>
-            <div className="flex flex-col items-center relative">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mb-2 relative z-10">
+
+            {/* LINE */}
+            <div className="flex-1 h-0.5 bg-gray-200 mt-4 mx-2"></div>
+
+            {/* STEP 2 */}
+            <div className="flex flex-col items-center w-24 text-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mb-2">
                 <span className="text-gray-500 font-semibold text-sm">2</span>
               </div>
-              <span className="text-sm font-semibold text-gray-400">
-                ID VERIFICATION
+              <span className="text-sm font-semibold text-gray-400 leading-tight">
+                ID
+                <br />
+                VERIFICATION
               </span>
             </div>
-            <div className="flex-1 h-0.5 bg-gray-200 mx-2"></div>
-            <div className="flex flex-col items-center relative">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mb-2 relative z-10">
+
+            {/* LINE */}
+            <div className="flex-1 h-0.5 bg-gray-200 mt-4 mx-2"></div>
+
+            {/* STEP 3 */}
+            <div className="flex flex-col items-center w-24 text-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mb-2">
                 <span className="text-gray-500 font-semibold text-sm">3</span>
               </div>
-              <span className="text-sm font-semibold text-gray-400">
-                COMPLETE VERIFICATION
+              <span className="text-sm font-semibold text-gray-400 leading-tight">
+                COMPLETE
+                <br />
+                VERIFICATION
               </span>
             </div>
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl font-bold text-gray-900 mb-3 text-center w-full">
+        <h2 className="text-2xl font-bold text-gray-900 mb-5 text-center w-full">
           Verify Identity
         </h2>
 
-        {/* Subtitle */}
-        <p className="text-gray-600 mb-10 text-center w-full text-base leading-relaxed px-2">
-          Enter your email to securely complete your identity verification
-        </p>
-
         {/* Info Cards */}
-        <div className="w-full space-y-6 mb-10">
+        <div className="w-full space-y-5 mb-5">
           <div className="flex items-start">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4 shrink-0 border border-gray-200">
               <span className="text-xl">📧</span>
@@ -418,7 +461,10 @@ const VerificationFlow = () => {
         )}
 
         {/* Email Input */}
-        <div className="w-full mb-8">
+        <div className="w-full mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2 ml-1">
+            Email
+          </label>
           <div className="relative">
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
               <svg
@@ -438,7 +484,9 @@ const VerificationFlow = () => {
             </div>
             <input
               type="email"
-              className="w-full h-16 pl-14 pr-6 rounded-2xl border-2 border-gray-200 focus:outline-none focus:border-blue-500 bg-white text-gray-900 text-lg disabled:opacity-50 placeholder-gray-400 transition-colors"
+              className="w-full h-16 pl-14 pr-6 rounded-2xl border-2 border-gray-200
+             focus:outline-none focus:border-blue-500 bg-white text-gray-900
+             text-lg disabled:opacity-60 placeholder-gray-400 transition-colors"
               placeholder="Email Address"
               value={email}
               onChange={(e) => {
@@ -446,7 +494,7 @@ const VerificationFlow = () => {
                 if (emailError) setEmailError("");
               }}
               required
-              disabled={loading}
+              disabled={loading || emailLocked} // 🔒 key line
             />
           </div>
           {emailError && (
@@ -455,7 +503,7 @@ const VerificationFlow = () => {
         </div>
 
         {/* Terms */}
-        <div className="w-full mb-10 px-2">
+        <div className="w-full mb-5 px-2">
           <p className="text-xs text-gray-500 text-center leading-relaxed">
             By providing your email, you agree to our{" "}
             <a

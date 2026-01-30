@@ -67,5 +67,6 @@ export const ROUTES = {
   VERIFICATION: "/verify",
   VERIFICATION_CALLBACK: "/verify-callback",
   CHECKIN_STATUS: "/checkinstatus",
+  PROFILE: "/profile",
   // Add other routes here as you create them
 };

@@ -19,6 +19,7 @@ export const API_ENDPOINTS = {
   PERSIST_AADHAAR_UPDATE: "/guest/persist/aadhaar/update",
   UPDATE_EMAIL: "/guest/persist/email/update",
   PROPERTY_BY_ID: "/HotelPropertyRead/property_by_id",
+  AADHAAR_IMAGE_BY_PHONE: "/HotelGuestRead/aadhar/image",
 };
 
 // Storage Keys (only what we need)

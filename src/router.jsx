@@ -14,6 +14,7 @@ import SuccessPage from "@/pages/SuccessPage";
 import UserDetails from "./pages/UserDetails";
 import VerificationCallbackPage from "./pages/VerificationCallbackPage";
 import CheckinStatusPage from "./pages/CheckInStatusPage";
+import ProfilePage from "./pages/ProfilePage";
 
 import { ROUTES } from "@/constants/ui";
 
@@ -41,6 +42,7 @@ const Router = () => {
               path={`${ROUTES.LOGIN}/:mobile/:propertyId`}
               element={<LoginPage />}
             />
+            <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
 
             {/* Verification routes */}
             <Route

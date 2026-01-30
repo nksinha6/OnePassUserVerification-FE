@@ -15,7 +15,7 @@ export const API_ENDPOINTS = {
   DIGILOCKER_CREATE_URL: "/digilocker/create-url",
   AADHAAR_DATA: "/digilocker/aadhaar",
   FACE_MATCH: "/faceverification/match",
-  PERSIST_SELFIE: "/guest/persist/selfie",
+  PERSIST_IMAGE: "/guest/persist/aadhar/image",
   PERSIST_AADHAAR_UPDATE: "/guest/persist/aadhaar/update",
   UPDATE_EMAIL: "/guest/persist/email/update",
   PROPERTY_BY_ID: "/HotelPropertyRead/property_by_id",

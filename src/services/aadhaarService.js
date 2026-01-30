@@ -109,22 +109,22 @@ export const matchFace = async (
  *
  * @param {string} phoneCountryCode
  * @param {string} phoneNumber
- * @param {File} selfieFile
+ * @param {File} imageFile
  * @returns {Promise}
  */
-export const persistGuestSelfie = async (
+export const persistGuestImage = async (
   phoneCountryCode,
   phoneNumber,
-  selfieFile,
+  imageFile,
 ) => {
   try {
     const formData = new FormData();
     formData.append("phoneCountryCode", phoneCountryCode);
     formData.append("phoneNumber", phoneNumber);
-    formData.append("selfie", selfieFile);
+    formData.append("image", imageFile);
 
     const response = await apiClient.post(
-      API_ENDPOINTS.PERSIST_SELFIE,
+      API_ENDPOINTS.PERSIST_IMAGE,
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },

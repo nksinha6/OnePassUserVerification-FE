@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import {
   getAadhaarData,
   persistAadhaarVerify,
-  persistGuestSelfie,
+  persistGuestImage,
 } from "@/services/aadhaarService";
 import { getGuestByPhone } from "@/services/guestService";
 import { ROUTES } from "@/constants/ui";
@@ -123,13 +123,13 @@ const CheckInStatusPage = () => {
           const aadhaarBase64 =
             data?.photo_link || data?.image || data?.profile_image;
 
-          const selfieFile = base64ToFile(aadhaarBase64);
+          const imageFile = base64ToFile(aadhaarBase64);
 
-          if (selfieFile) {
-            await persistGuestSelfie(pCode, pNum, selfieFile);
+          if (imageFile) {
+            await persistGuestImage(pCode, pNum, imageFile);
           }
         } catch (e) {
-          console.warn("Selfie persist skipped", e);
+          console.warn("Image persist skipped", e);
         }
       } catch (err) {
         setError(err.message || "An error occurred during verification.");

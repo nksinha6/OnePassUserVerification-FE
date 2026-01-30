@@ -78,7 +78,6 @@ const VerificationFlow = () => {
 
         if (!guest) return;
 
-        // ✅ If guest is ALREADY verified → redirect
         if (guest.verificationStatus === "verified") {
           sessionStorage.setItem("guest", JSON.stringify(guest));
 
@@ -89,7 +88,6 @@ const VerificationFlow = () => {
           return;
         }
 
-        // ✅ If NOT verified → show email page
         if (guest.email) {
           setEmail(guest.email);
           setEmailLocked(true);

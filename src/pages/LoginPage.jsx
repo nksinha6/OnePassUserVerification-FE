@@ -1,6 +1,6 @@
 // src/pages/VerificationFlow.js
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Mail,
   Lock,
@@ -26,6 +26,7 @@ import LogoImage from "@/assets/images/1pass_logo.jpg";
 const VerificationFlow = () => {
   const { mobile, propertyId } = useParams(); // Changed from mobileId to mobile
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Check if we're on the base login page or login with parameters
   const isBaseLoginPage =
@@ -71,18 +72,25 @@ const VerificationFlow = () => {
 
       try {
         const { country, number } = getPhoneNumber();
-
         const guest = await getGuestByPhone(country, number);
-        console.log(guest);
 
-        if (guest && guest.email) {
-          setEmail(guest.email); // 🔥 auto-fill email
+        console.log("Guest:", guest);
+
+        if (!guest) return;
+
+        if (guest.verificationStatus === "verified") {
+          sessionStorage.setItem("guest", JSON.stringify(guest));
+
+          navigate(ROUTES.PROFILE, {
+            replace: true,
+            state: { guest },
+          });
+          return;
+        }
+
+        if (guest.email) {
+          setEmail(guest.email);
           setEmailLocked(true);
-
-          // Lock only if already verified
-          if (guest.verificationStatus === "verified") {
-            setEmailLocked(true);
-          }
         }
       } catch (err) {
         console.error("Guest lookup failed:", err);

@@ -116,6 +116,8 @@ const CheckInStatusPage = () => {
           data?.gender,
           data?.dob,
           country,
+          data?.verification_id,
+          data?.reference_id,
           data?.split_address ?? {},
         );
 

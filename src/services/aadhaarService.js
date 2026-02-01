@@ -158,6 +158,8 @@ export const persistGuestImage = async (
  * @param {string} gender
  * @param {string} dateOfBirth
  * @param {string} nationality
+ * @param {string} verificationId
+ * @param {string} referenceId
  * @returns {Promise}
  */
 export const persistAadhaarVerify = async (
@@ -168,6 +170,8 @@ export const persistAadhaarVerify = async (
   gender,
   dateOfBirth,
   nationality,
+  verificationId,
+  referenceId,
   splitAddress,
 ) => {
   try {
@@ -179,6 +183,8 @@ export const persistAadhaarVerify = async (
       gender,
       dateOfBirth,
       nationality,
+      verificationId,
+      referenceId,
       splitAddress: {
         country: splitAddress?.country ?? null,
         state: splitAddress?.state ?? null,

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
 import {
   getAadhaarData,
   persistAadhaarVerify,
@@ -198,12 +197,6 @@ const CheckInStatusPage = () => {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <header className="flex items-center px-4 h-16 border-b border-slate-100">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-slate-50 rounded-full transition-colors"
-        >
-          <ChevronLeft size={24} className="text-slate-800" />
-        </button>
         <h1 className="flex-1 text-center text-lg font-bold text-slate-800 pr-10">
           Check-in Status
         </h1>

@@ -21,6 +21,7 @@ import {
 import { getGuestByPhone } from "@/services/guestService";
 
 import LoginHeader from "@/components/LoginHeader";
+import Loader from "@/components/Loader";
 import LogoImage from "@/assets/images/1pass_logo.jpg";
 
 const VerificationFlow = () => {
@@ -43,6 +44,7 @@ const VerificationFlow = () => {
   const [mobileError, setMobileError] = useState("");
   const [propertyInfo, setPropertyInfo] = useState({ name: "" });
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(hasUrlParams);
 
   // Generate proper UUID format verification ID
   const generateVerificationId = () => {
@@ -68,7 +70,10 @@ const VerificationFlow = () => {
 
   useEffect(() => {
     const fetchGuestIfExists = async () => {
-      if (!hasUrlParams) return;
+      if (!hasUrlParams) {
+        setInitializing(false);
+        return;
+      }
 
       try {
         const { country, number } = getPhoneNumber();
@@ -76,7 +81,10 @@ const VerificationFlow = () => {
 
         console.log("Guest:", guest);
 
-        if (!guest) return;
+        if (!guest) {
+          setInitializing(false);
+          return;
+        }
 
         if (guest.verificationStatus === "verified") {
           sessionStorage.setItem("guest", JSON.stringify(guest));
@@ -92,8 +100,11 @@ const VerificationFlow = () => {
           setEmail(guest.email);
           setEmailLocked(true);
         }
+
+        setInitializing(false);
       } catch (err) {
         console.error("Guest lookup failed:", err);
+        setInitializing(false);
       }
     };
 
@@ -603,7 +614,7 @@ const VerificationFlow = () => {
     );
   };
 
-  return renderContent();
+  return initializing ? <Loader /> : renderContent();
 };
 
 export default VerificationFlow;

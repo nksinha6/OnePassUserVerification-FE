@@ -1,8 +1,15 @@
-import "./App.css"; // Import App-specific styles
-import Router from "./router"; // Import your router
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./routes.jsx";
+
+const basename = import.meta.env.DEV ? "/" : "/user";
 
 function App() {
-  return <Router />; // Just render the router
+  return (
+    <BrowserRouter basename={basename}>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }
 
 export default App;

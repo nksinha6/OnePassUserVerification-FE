@@ -1,103 +1,118 @@
-// src/services/guestService.js
-import apiClient from "@/services/apiClient";
-import { API_ENDPOINTS } from "@/constants/config";
+import api from "./api";
+import ENDPOINTS from "../constants/config";
 
-/**
- * Fetch guest information by phone number
- * @param {string} phoneCountryCode - Country code (e.g., "+91")
- * @param {string} phoneNumber - Phone number without country code
- * @returns {Promise} Guest data or null if not found
- */
+// Fetch guest by phone number
 export const getGuestByPhone = async (phoneCountryCode, phoneNumber) => {
   try {
-    const response = await apiClient.get(API_ENDPOINTS.HOTEL_GUEST_BY_PHONE, {
+    const response = await api.get(ENDPOINTS.HOTEL_GUEST_BY_PHONE, {
       params: {
         phoneCountryCode,
         phoneno: phoneNumber,
       },
     });
-    return response.data;
+
+    return response.data; // because api.get returns full axios response
   } catch (error) {
-    // Handle specific error cases
     if (error.response?.status === 404) {
-      // Guest not found - this is expected for new users
       console.log("Guest not found, likely a new user");
       return null;
     }
 
-    // Log other errors but don't break the flow
     console.error("Error fetching guest:", error);
     return null;
   }
 };
 
 /**
- * Extract country code and phone number from full phone string
- * @param {string} fullPhone - Full phone number with country code (e.g., "+919876543210")
- * @returns {Object} {countryCode, phoneNumber}
+ * Update guest email
  */
-export const parsePhoneNumber = (fullPhone) => {
-  // Remove any non-digit characters except leading +
-  const cleaned = fullPhone.replace(/\s+/g, "");
+export const updateGuestEmail = async (
+  phoneCountryCode,
+  phoneNumber,
+  emailAddress,
+) => {
+  try {
+    const response = await api.put(ENDPOINTS.UPDATE_EMAIL, {
+      phoneCountryCode,
+      phoneNumber,
+      emailAddress,
+    });
 
-  // Extract country code - more specific patterns for common country codes
-  // For India: +91 followed by a number (usually starting with 7,8,9)
-  if (cleaned.startsWith("+91") && cleaned.length > 3) {
-    return {
-      countryCode: "+91",
-      phoneNumber: cleaned.slice(3).replace(/\D/g, ""),
-    };
+    return response.data; // ✅ always return data
+  } catch (error) {
+    console.error(
+      "❌ Failed to update email:",
+      error.response?.data || error.message,
+    );
+    throw new Error(error.response?.data?.message || "Failed to update email");
   }
-
-  // For US/Canada: +1
-  if (cleaned.startsWith("+1") && cleaned.length > 2) {
-    return {
-      countryCode: "+1",
-      phoneNumber: cleaned.slice(2).replace(/\D/g, ""),
-    };
-  }
-
-  // Extract country code (assumes it starts with + and has 1-3 digits)
-  const countryCodeMatch = cleaned.match(/^\+\d{1,3}/);
-  if (!countryCodeMatch) {
-    return {
-      countryCode: "+91", // Default to India
-      phoneNumber: cleaned.replace(/\D/g, ""),
-    };
-  }
-
-  const countryCode = countryCodeMatch[0];
-  const phoneNumber = cleaned.slice(countryCode.length).replace(/\D/g, "");
-
-  return { countryCode, phoneNumber };
 };
 
 /**
- * Fetch guest selfie by phone number
- * @param {string} phoneCountryCode - Country code (e.g., "91")
- * @param {string} phoneNumber - Phone number without country code
- * @returns {Promise} Selfie data or null if not found
+ * Persist Guest Register
+ * PUT: /api/guest/persist/status
+ *
+ * @param {string} phoneCountryCode
+ * @param {string} phoneNumber
+ * @param {string} verificationStatus
+ * @returns {Promise<Object>}
  */
-export const getGuestSelfieByPhone = async (phoneCountryCode, phoneNumber) => {
+export const persistGuestRegister = async (
+  phoneCountryCode,
+  phoneNumber,
+  verificationStatus,
+) => {
   try {
-    const response = await apiClient.get(
-      API_ENDPOINTS.HOTEL_GUEST_SELFIE_BY_PHONE,
-      {
-        params: {
-          phoneCountryCode,
-          phoneno: phoneNumber,
-        },
-      }
-    );
+    if (!phoneCountryCode || !phoneNumber) {
+      throw new Error("Phone details are required");
+    }
+
+    const payload = {
+      phoneCountryCode,
+      phoneNumber,
+      verificationStatus,
+    };
+
+    console.log("📤 Persist Guest Register Payload:", payload);
+    console.log("📡 Endpoint:", ENDPOINTS.PERSIST_GUEST_REGISTER);
+
+    const response = await api.put(ENDPOINTS.PERSIST_GUEST_REGISTER, payload);
+
+    console.log("✅ Guest Register Persisted:", response.data);
 
     return response.data;
   } catch (error) {
-    if (error.response?.status === 404) {
-      console.log("Guest selfie not found");
-      return null;
-    }
+    console.error(
+      "❌ Error persisting guest register:",
+      error.response?.data || error.message,
+    );
+    throw error;
+  }
+};
+/**
+ * Update guest profile
+ * @param {string} id
+ * @param {string} name
+ * @param {string} organization
+ * @returns {Promise<Object|null>}
+ */
+export const updateGuestProfile = async (id, name, organization) => {
+  try {
+    const response = await api.put(ENDPOINTS.UPDATE_GUEST_PROFILE, {
+      id,
+      name,
+      organization,
+    });
 
-    console.error("Error fetching guest selfie:", error);
+    return response?.data || null;
+  } catch (error) {
+    console.error("Update Guest Profile Error:", error.message);
     return null;
   }
+};
+export default {
+  getGuestByPhone,
+  updateGuestEmail,
+  persistGuestRegister,
+  updateGuestProfile,
 };

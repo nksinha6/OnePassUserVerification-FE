@@ -1,14 +1,13 @@
-// src/services/aadhaarService.js
-import apiClient from "@/services/apiClient";
-import { API_ENDPOINTS } from "@/constants/config";
+import api from "./api"; // or wherever your axios instance is
+import ENDPOINTS from "../constants/config";
 
 /**
  * Fetch Aadhaar data using verification and reference IDs
  * @param {string} verificationId - Verification ID
- * @param {string} referenceId - Reference ID
- * @param {string} phoneCode - Phone country code
- * @param {string} phoneNumber - Phone number
- * @returns {Promise} Aadhaar data or null if not found
+ * @param {string} referenceId - Reference ID (optional)
+ * @param {string} phoneCode - Phone country code (e.g., +91)
+ * @param {string} phoneNumber - Phone number (without country code)
+ * @returns {Promise<Object|null>} Aadhaar data or null if not found
  */
 export const getAadhaarData = async (
   verificationId,
@@ -17,207 +16,59 @@ export const getAadhaarData = async (
   phoneNumber,
 ) => {
   try {
-    // Build minimal payload - verificationId is the key identifier
+    if (!verificationId) {
+      throw new Error("Verification ID is required");
+    }
+
+    // 🔹 Build payload
     const payload = {
       verificationId,
       phoneCountryCode: phoneCode,
       phoneNumber,
     };
 
-    // Only include referenceId if it's explicitly provided and not the same as verificationId
+    // Include referenceId only if valid
     if (referenceId && referenceId !== verificationId) {
       payload.referenceId = referenceId;
     }
 
-    console.log("🔍 Fetching Aadhaar data with payload:", payload);
-    console.log("📤 Sending to endpoint:", API_ENDPOINTS.AADHAAR_DATA);
+    console.log("🔍 Fetching Aadhaar data...");
+    console.log("📦 Payload:", payload);
+    console.log("📤 Endpoint:", ENDPOINTS.AADHAAR_DATA);
 
-    const response = await apiClient.post(API_ENDPOINTS.AADHAAR_DATA, payload);
+    const response = await api.post(ENDPOINTS.AADHAAR_DATA, payload);
 
     console.log("✅ Aadhaar data received:", response.data);
+
     return response.data;
   } catch (error) {
-    console.error("❌ Error fetching Aadhaar data:", {
+    console.error("❌ Aadhaar fetch error:", {
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,
-      payload: error.config?.data,
     });
 
+    // 🔹 Error handling
     if (error.response?.status === 404) {
-      console.log("⚠️ Aadhaar data not found (404)");
+      console.warn("⚠️ Aadhaar data not found (404)");
       return null;
     }
+
     if (error.response?.status === 400) {
       const msg =
         error.response?.data?.message ||
         error.response?.data?.error ||
-        "Unknown error";
-      throw new Error(`[400] Invalid parameters: ${msg}`);
+        "Invalid parameters";
+      throw new Error(`[400] ${msg}`);
     }
+
     if (error.response?.status === 401) {
       throw new Error("Authentication failed (401)");
     }
-    throw error;
-  }
-};
 
-/**
- * Face match verification service
- * @param {string} verificationId - Verification ID
- * @param {File} selfieFile - Selfie image file
- * @param {File} idImageFile - Aadhaar image file
- * @param {number} threshold - Match threshold (default: 0.75)
- * @returns {Promise} Face match result
- */
-export const matchFace = async (
-  verificationId,
-  selfieFile,
-  idImageFile,
-  threshold = 0.75,
-) => {
-  try {
-    const formData = new FormData();
-    formData.append("verificationId", verificationId);
-    formData.append("selfie", selfieFile);
-    formData.append("idImage", idImageFile);
-    formData.append("threshold", threshold);
-
-    const response = await apiClient.post(API_ENDPOINTS.FACE_MATCH, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
-    return response.data;
-  } catch (error) {
-    if (error.response?.status === 400) {
-      throw new Error("Invalid image files or parameters");
-    }
-    if (error.response?.status === 413) {
-      throw new Error("Image file size exceeds limit");
-    }
-    if (error.response?.status === 422) {
-      throw new Error("Face not detected in image(s)");
-    }
-    console.error("Error in face match verification:", error);
-    throw error;
-  }
-};
-
-/**
- * Persist guest selfie using phone details
- * POST: /api/guest/persist/selfie
- *
- * @param {string} phoneCountryCode
- * @param {string} phoneNumber
- * @param {File} imageFile
- * @returns {Promise}
- */
-export const persistGuestImage = async (
-  phoneCountryCode,
-  phoneNumber,
-  imageFile,
-) => {
-  try {
-    const formData = new FormData();
-    formData.append("phoneCountryCode", phoneCountryCode);
-    formData.append("phoneNumber", phoneNumber);
-    formData.append("image", imageFile);
-
-    const response = await apiClient.post(
-      API_ENDPOINTS.PERSIST_IMAGE,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      },
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch Aadhaar data",
     );
-
-    return response.data;
-  } catch (error) {
-    if (error.response?.status === 400) {
-      throw new Error("Invalid selfie or phone data");
-    }
-    if (error.response?.status === 401) {
-      throw new Error("Unauthorized request");
-    }
-    if (error.response?.status === 413) {
-      throw new Error("Selfie image too large");
-    }
-
-    console.error("Error persisting selfie:", error);
-    throw error;
-  }
-};
-
-/**
- * Persist Aadhaar verification details for guest
- * POST: /api/guest/persist/aadhaar/verify
- *
- * @param {string} phoneCountryCode
- * @param {string} phoneNumber
- * @param {string} name
- * @param {string} gender
- * @param {string} dateOfBirth
- * @param {string} nationality
- * @param {string} verificationId
- * @param {string} referenceId
- * @returns {Promise}
- */
-export const persistAadhaarVerify = async (
-  uid,
-  phoneCountryCode,
-  phoneNumber,
-  name,
-  gender,
-  dateOfBirth,
-  nationality,
-  verificationId,
-  referenceId,
-  splitAddress,
-) => {
-  try {
-    const payload = {
-      uid,
-      phoneCountryCode,
-      phoneNumber,
-      name,
-      gender,
-      dateOfBirth,
-      nationality,
-      verificationId,
-      referenceId,
-      splitAddress: {
-        country: splitAddress?.country ?? null,
-        state: splitAddress?.state ?? null,
-        dist: splitAddress?.dist ?? null,
-        subdist: splitAddress?.subdist ?? null,
-        vtc: splitAddress?.vtc ?? null,
-        po: splitAddress?.po ?? null,
-        street: splitAddress?.street ?? null,
-        house: splitAddress?.house ?? null,
-        landmark: splitAddress?.landmark ?? null,
-        pincode: splitAddress?.pincode ?? null,
-      },
-    };
-
-    const response = await apiClient.post(
-      API_ENDPOINTS.PERSIST_AADHAAR_UPDATE,
-      payload,
-    );
-
-    return response.data;
-  } catch (error) {
-    if (error.response?.status === 400) {
-      throw new Error("Invalid Aadhaar verification data");
-    }
-    if (error.response?.status === 401) {
-      throw new Error("Unauthorized request");
-    }
-    if (error.response?.status === 404) {
-      throw new Error("Guest not found");
-    }
-
-    console.error("Error persisting Aadhaar verification:", error);
-    throw error;
   }
 };
 
@@ -226,28 +77,177 @@ export const persistAadhaarVerify = async (
  * POST: /api/guest/persist/aadhaar/update
  *
  * @param {object} aadhaarPayload - Complete Aadhaar payload
- * @returns {Promise}
+ * @returns {Promise<Object>}
  */
 export const persistAadhaarUpdate = async (aadhaarPayload) => {
   try {
-    const response = await apiClient.post(
-      API_ENDPOINTS.PERSIST_AADHAAR_UPDATE,
+    if (!aadhaarPayload) {
+      throw new Error("Aadhaar payload is required");
+    }
+
+    console.log("📤 Persist Aadhaar Payload:", aadhaarPayload);
+
+    const response = await api.post(
+      ENDPOINTS.PERSIST_AADHAAR_UPDATE,
       aadhaarPayload,
     );
 
+    console.log("✅ Aadhaar update persisted successfully");
+
     return response.data;
   } catch (error) {
+    console.error(
+      "❌ Error persisting Aadhaar update:",
+      error.response?.data || error.message,
+    );
+
     if (error.response?.status === 400) {
       throw new Error("Invalid Aadhaar update data");
     }
+
     if (error.response?.status === 401) {
       throw new Error("Unauthorized request");
     }
+
     if (error.response?.status === 404) {
       throw new Error("Guest not found");
     }
 
-    console.error("Error persisting Aadhaar update:", error);
-    throw error;
+    throw new Error(
+      error.response?.data?.message || "Failed to persist Aadhaar update",
+    );
   }
+};
+
+/**
+ * Persist Aadhaar image for guest
+ * POST: /api/guest/persist/aadhar/image
+ *
+ * @param {string} phoneCountryCode
+ * @param {string} phoneNumber
+ * @param {File|Blob} imageFile
+ * @returns {Promise<Object>}
+ */
+export const persistAadhaarImage = async (
+  phoneCountryCode,
+  phoneNumber,
+  imageFile,
+) => {
+  try {
+    if (!phoneCountryCode || !phoneNumber) {
+      throw new Error("Phone details are required");
+    }
+
+    if (!imageFile) {
+      throw new Error("Image file is required");
+    }
+
+    const formData = new FormData();
+
+    formData.append("PhoneCountryCode", phoneCountryCode);
+    formData.append("PhoneNumber", phoneNumber);
+    formData.append("Image", imageFile);
+    // ⚠️ Make sure this matches backend parameter name exactly
+
+    console.log("📤 Persist Aadhaar Image Uploading...");
+
+    const response = await api.post(ENDPOINTS.PERSIST_IMAGE, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    console.log("✅ Aadhaar image persisted successfully");
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "❌ Error persisting Aadhaar image:",
+      error.response?.data || error.message,
+    );
+
+    if (error.response?.status === 400) {
+      throw new Error("Invalid Aadhaar image or phone details");
+    }
+
+    if (error.response?.status === 401) {
+      throw new Error("Unauthorized request");
+    }
+
+    if (error.response?.status === 413) {
+      throw new Error("Image file too large");
+    }
+
+    throw new Error(
+      error.response?.data?.message || "Failed to persist Aadhaar image",
+    );
+  }
+};
+
+/**
+ * Fetch Aadhaar image using phone details
+ * GET: /HotelGuestRead/aadhar/image
+ *
+ * @param {string} phoneCountryCode - e.g. "91" or "+91"
+ * @param {string} phoneNumber - e.g. "9876543210"
+ * @returns {Promise<Object|null>}
+ */
+export const getAadhaarImageByPhone = async (phoneCountryCode, phoneNumber) => {
+  try {
+    if (!phoneCountryCode || !phoneNumber) {
+      throw new Error("Phone details are required");
+    }
+
+    // 🔥 Normalize country code (remove + if present)
+    const normalizedCode = phoneCountryCode.replace("+", "");
+
+    const params = {
+      phoneCountryCode: normalizedCode,
+      phoneno: phoneNumber,
+    };
+
+    console.log("🔍 Fetching Aadhaar image...");
+    console.log("📤 Endpoint:", ENDPOINTS.AADHAAR_IMAGE_BY_PHONE);
+    console.log("📦 Params:", params);
+
+    const response = await api.get(ENDPOINTS.AADHAAR_IMAGE_BY_PHONE, {
+      params,
+    });
+
+    console.log("✅ Aadhaar image response:", response.data);
+
+    return response.data || null;
+  } catch (error) {
+    console.error("❌ Error fetching Aadhaar image:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
+    if (error.response?.status === 404) {
+      console.warn("⚠️ Aadhaar image not found (404)");
+      return null;
+    }
+
+    if (error.response?.status === 400) {
+      throw new Error(
+        error.response?.data?.message || "Invalid phone details (400)",
+      );
+    }
+
+    if (error.response?.status === 401) {
+      throw new Error("Authentication failed (401)");
+    }
+
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch Aadhaar image",
+    );
+  }
+};
+
+export default {
+  getAadhaarData,
+  persistAadhaarUpdate,
+  persistAadhaarImage,
+  getAadhaarImageByPhone,
 };

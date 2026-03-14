@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import MobileLayout from "./pages/MobileLayout.jsx";
+import MobileLayout from "./Pages/MobileLayout.jsx";
 import Home from "./Pages/Home.jsx";
 import EmailCapture from "./Pages/EmailCapture.jsx";
 import Consent from "./Pages/Consent.jsx";

@@ -127,7 +127,7 @@ const Consent = () => {
 
     const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-    let redirectPath = "/verification-code"; // default
+    let redirectPath = "/verification-code";
 
     if (
       (businessType === "Corporate" || businessType === "Hospitality") &&

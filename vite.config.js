@@ -7,6 +7,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
+    // Base path for dev vs production
+    base: mode === "development" ? "/" : "/user/",
+    
     plugins: [
       react({
         babel: {

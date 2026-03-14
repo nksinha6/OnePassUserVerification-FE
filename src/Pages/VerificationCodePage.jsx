@@ -6,6 +6,7 @@ import ProgressBar from "../Components/ProgressBar";
 import { VERIFICATION_UI } from "../constants/ui";
 import aadhaarService from "../services/aadhaarService"; // ✅ IMPORT SERVICE
 import { persistGuestRegister } from "../services/guestService";
+import digilockerService from "../services/digilockerService";
 
 const VerificationCodePage = () => {
   const navigate = useNavigate();
@@ -140,6 +141,17 @@ const VerificationCodePage = () => {
           console.warn("⚠️ No Aadhaar data received");
           return;
         }
+
+        console.log("📡 Persisting DigiLocker IDs...");
+
+        const digilockerResponse = await digilockerService.persistDigilockerIds(
+          String(verificationId),
+          String(referenceId),
+          phoneCode,
+          phoneNumber,
+        );
+
+        console.log("📥 DigiLocker API Response:", digilockerResponse);
 
         const country =
           aadhaarData?.split_address?.country ||

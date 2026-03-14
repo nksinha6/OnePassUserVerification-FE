@@ -142,6 +142,7 @@ const Consent = () => {
       verificationId,
       [docMap[selectedId]],
       redirectUrl,
+      // "",
       userFlow,
     );
 

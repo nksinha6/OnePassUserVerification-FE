@@ -11,6 +11,7 @@ export const ENDPOINTS = {
   AADHAAR_IMAGE_BY_PHONE: "/HotelGuestRead/aadhar/image",
   PERSIST_GUEST_REGISTER: "/guest/persist/status",
   UPDATE_GUEST_PROFILE: "/guest/persist/profile/update",
+  PERSIST_DIGILOCKER_IDS: "/guest/persist/digilocker_ids",
 };
 
 export default ENDPOINTS;

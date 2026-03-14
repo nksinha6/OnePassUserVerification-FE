@@ -97,7 +97,82 @@ export const createDigilockerUrl = async (
   }
 };
 
+/**
+ * Persist DigiLocker IDs
+ * @param {string} verificationId - Verification ID
+ * @param {string|number} referenceId - Reference ID
+ * @param {string} phoneCode - Phone country code (e.g., +91)
+ * @param {string} phoneNumber - Phone number (without country code)
+ * @returns {Promise<Object|null>} Response data or null
+ */
+export const persistDigilockerIds = async (
+  verificationId,
+  referenceId,
+  phoneCode,
+  phoneNumber,
+) => {
+  try {
+    if (!verificationId) {
+      throw new Error("Verification ID is required");
+    }
+
+    // 🔹 Build payload
+    const payload = {
+      verificationId,
+      phoneCountryCode: phoneCode,
+      phoneNumber,
+    };
+
+    // Include referenceId only if available
+    if (referenceId) {
+      payload.referenceId = referenceId;
+    }
+
+    console.log("🔍 Persisting DigiLocker IDs...");
+    console.log("📦 Payload:", payload);
+    console.log("📤 Endpoint:", API_ENDPOINTS.PERSIST_DIGILOCKER_IDS);
+
+    const response = await api.post(
+      API_ENDPOINTS.PERSIST_DIGILOCKER_IDS,
+      payload,
+    );
+
+    console.log("✅ DigiLocker IDs persisted:", response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error("❌ DigiLocker persist error:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
+    // 🔹 Error handling
+    if (error.response?.status === 404) {
+      console.warn("⚠️ Resource not found (404)");
+      return null;
+    }
+
+    if (error.response?.status === 400) {
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Invalid parameters";
+      throw new Error(`[400] ${msg}`);
+    }
+
+    if (error.response?.status === 401) {
+      throw new Error("Authentication failed (401)");
+    }
+
+    throw new Error(
+      error.response?.data?.message || "Failed to persist DigiLocker IDs",
+    );
+  }
+};
+
 export default {
   verifyDigilockerAccount,
   createDigilockerUrl,
+  persistDigilockerIds,
 };

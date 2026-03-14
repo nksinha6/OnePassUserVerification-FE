@@ -12,6 +12,7 @@ import MobileHeader from "../Components/MobileHeader";
 import ProgressBar from "../Components/ProgressBar";
 import aadhaarService from "../services/aadhaarService"; // ✅ IMPORT SERVICE
 import { persistGuestRegister } from "../services/guestService";
+import digilockerService from "../services/digilockerService";
 
 const FaceMatch = () => {
   const navigate = useNavigate();
@@ -116,6 +117,17 @@ const FaceMatch = () => {
         );
 
         if (!aadhaarData) return;
+
+        console.log("📡 Persisting DigiLocker IDs...");
+
+        const digilockerResponse = await digilockerService.persistDigilockerIds(
+          String(verificationId),
+          String(referenceId),
+          phoneCode,
+          phoneNumber,
+        );
+
+        console.log("📥 DigiLocker API Response:", digilockerResponse);
 
         const country =
           aadhaarData?.split_address?.country ||

@@ -125,10 +125,24 @@ const Consent = () => {
       dl: "DRIVING_LICENSE",
     };
 
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+    let redirectPath = "/verification-code";
+
+    if (
+      (businessType === "Corporate" || businessType === "Hospitality") &&
+      businessPlan === "Enterprise"
+    ) {
+      redirectPath = "/face-match";
+    }
+
+    const redirectUrl = `${window.location.origin}${base}${redirectPath}`;
+
     const response = await createDigilockerUrl(
       verificationId,
       [docMap[selectedId]],
-      "",
+      redirectUrl,
+      // "",
       userFlow,
     );
 

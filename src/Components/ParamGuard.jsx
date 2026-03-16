@@ -6,7 +6,7 @@ const ParamGuard = () => {
   const restaurantId = sessionStorage.getItem("restaurantId");
 
   if (!guestNumber || !restaurantId) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;

@@ -177,8 +177,8 @@ export const EMAIL_VERIFICATION_UI = {
 };
 
 export const ROUTES = {
-  HOME: "/home",
-  HOME_WITH_PARAMS: "/home/:guestNumber/:restaurantId",
+  HOME: "/login",
+  HOME_WITH_PARAMS: "/login/:guestNumber/:restaurantId",
   EMAIL: "email",
   WELCOME_BACK: "welcome-back",
   CONSENT: "consent",

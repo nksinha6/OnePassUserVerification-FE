@@ -72,8 +72,12 @@ const EmailCapture = () => {
       sessionStorage.setItem("phoneCountryCode", phoneCountryCode);
       sessionStorage.setItem("phoneNumber", phoneNumber);
 
+      const nextRoute = shouldShowIdVerification
+        ? "/id-verification"
+        : "/consent";
+
       // ✅ Navigate after success
-      navigate("/email-verification", {
+      navigate(nextRoute, {
         state: {
           email,
           businessType,

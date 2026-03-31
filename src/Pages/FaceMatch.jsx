@@ -80,27 +80,6 @@ const FaceMatch = () => {
     const phoneCode = sessionStorage.getItem("phoneCountryCode") || "+91";
     const phoneNumber = sessionStorage.getItem("phoneNumber");
 
-    const base64ToFile = (base64String, fileName) => {
-      try {
-        if (!base64String) return null;
-
-        const arr = base64String.split(",");
-        const mimeMatch = arr[0].match(/:(.*?);/);
-        const mime = mimeMatch ? mimeMatch[1] : "image/jpeg";
-
-        const bstr = atob(arr[arr.length - 1]);
-        const u8arr = new Uint8Array(bstr.length);
-
-        for (let i = 0; i < bstr.length; i++) {
-          u8arr[i] = bstr.charCodeAt(i);
-        }
-
-        return new File([u8arr], fileName, { type: mime });
-      } catch (err) {
-        console.error("Base64 conversion failed:", err);
-        return null;
-      }
-    };
 
     const fetchAndPersist = async () => {
       try {
@@ -109,14 +88,6 @@ const FaceMatch = () => {
           return;
         }
 
-        const aadhaarData = await aadhaarService.getAadhaarData(
-          String(verificationId),
-          String(referenceId),
-          phoneCode,
-          phoneNumber,
-        );
-
-        if (!aadhaarData) return;
 
         console.log("📡 Persisting DigiLocker IDs...");
 
@@ -129,65 +100,10 @@ const FaceMatch = () => {
 
         console.log("📥 DigiLocker API Response:", digilockerResponse);
 
-        const country =
-          aadhaarData?.split_address?.country ||
-          aadhaarData?.splitAddress?.country;
-
-        const aadhaarUpdatePayload = {
-          Uid: aadhaarData?.uid || "",
-          PhoneCountryCode: phoneCode,
-          PhoneNumber: phoneNumber,
-          Name: aadhaarData?.name || "",
-          Gender: aadhaarData?.gender || "",
-          DateOfBirth: aadhaarData?.dob || "",
-          Nationality: country === "India" ? "Indian" : country || "",
-          VerificationId: String(verificationId),
-          ReferenceId: String(referenceId),
-        };
-
-        await aadhaarService.persistAadhaarUpdate(aadhaarUpdatePayload);
-
-        console.log("✅ Aadhaar Data Persisted");
-
-        // 🔹 Image Persist
-        const aadhaarBase64 =
-          aadhaarData?.photo_link ||
-          aadhaarData?.image ||
-          aadhaarData?.profile_image;
-
-        if (!aadhaarBase64) {
-          console.warn("❌ No Aadhaar image found");
-          return;
-        }
-
-        const formattedBase64 = aadhaarBase64.startsWith("data:image")
-          ? aadhaarBase64
-          : `data:image/jpeg;base64,${aadhaarBase64}`;
-
-        const imageFile = base64ToFile(formattedBase64, "aadhaar.jpg");
-
-        if (!imageFile) {
-          console.warn("❌ Image file conversion failed");
-          return;
-        }
 
         const type = sessionStorage.getItem("businessType");
         const plan = sessionStorage.getItem("businessPlan");
 
-        if (
-          (type === "Corporate" || type === "Hospitality") &&
-          plan === "Enterprise"
-        ) {
-          await aadhaarService.persistAadhaarImage(
-            phoneCode,
-            phoneNumber,
-            imageFile,
-          );
-
-          console.log("✅ Aadhaar Image Persisted");
-        } else {
-          console.log("🚫 Aadhaar Image API skipped");
-        }
 
         await persistGuestRegister(phoneCode, phoneNumber, "identity_verified");
 
@@ -316,10 +232,9 @@ const FaceMatch = () => {
         disabled={status !== "success"}
         onClick={() => navigate("/success")}
         className={`w-full h-14 rounded-[6px] shrink-0  font-bold transition flex items-center justify-center gap-2
-          ${
-            status === "success"
-              ? "bg-[#1b3631] text-white"
-              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+          ${status === "success"
+            ? "bg-[#1b3631] text-white"
+            : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
       >
         Continue

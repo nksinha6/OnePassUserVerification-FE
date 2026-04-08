@@ -181,7 +181,7 @@ const Consent = () => {
               className="flex items-center gap-1.5 py-1.5 px-1 rounded-lg cursor-pointer bg-transparent text-gray-700 active:scale-95 transition-all"
             >
               <Globe size={16} className="text-gray-500" />
-              <span className="text-sm font-semibold">
+              <span className="text-xs font-semibold">
                 {language === "hi" ? "हिंदी" : "English"}
               </span>
               <ChevronDown

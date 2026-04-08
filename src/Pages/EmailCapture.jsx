@@ -4,7 +4,7 @@ import ProgressBar from "../Components/ProgressBar";
 import { EMAIL_CAPTURE_UI } from "../constants/ui";
 import { ShieldCheck } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { updateGuestEmail } from "../services/guestService"; // ✅ adjust path
+import { updateGuestEmail, getGuestByPhone } from "../services/guestService"; // ✅ adjust path
 
 const EmailCapture = () => {
   const navigate = useNavigate();
@@ -20,6 +20,19 @@ const EmailCapture = () => {
     location.state?.phoneNumber || sessionStorage.getItem("visitorPhone");
   console.log(fullPhoneNumber);
 
+  // ✅ Split country code + phone number
+  const extractPhoneData = (phone) => {
+    if (!phone) return {};
+
+    const cleaned = phone.replace("+", "");
+
+    // Example: +919876543210
+    const phoneCountryCode = cleaned.slice(0, 2); // adjust if needed
+    const phoneNumber = cleaned.slice(2);
+
+    return { phoneCountryCode, phoneNumber };
+  };
+
   useEffect(() => {
     const type = sessionStorage.getItem("businessType") || "Hospitality";
     const plan = sessionStorage.getItem("businessPlan") || "Starter";
@@ -27,6 +40,30 @@ const EmailCapture = () => {
     setBusinessType(type);
     setBusinessPlan(plan);
   }, []);
+
+  useEffect(() => {
+    const fetchGuestData = async () => {
+      if (!fullPhoneNumber) return;
+
+      const { phoneCountryCode, phoneNumber } = extractPhoneData(fullPhoneNumber);
+      
+      if (phoneCountryCode && phoneNumber) {
+        try {
+          const guest = await getGuestByPhone(phoneCountryCode, phoneNumber);
+          if (guest) {
+            console.log("Guest data fetched:", guest);
+            // Optionally auto-fill the email if it exists
+            if (guest.emailId) setEmail(guest.emailId);
+            else if (guest.email) setEmail(guest.email);
+          }
+        } catch (error) {
+          console.error("Error calling getGuestByPhone:", error);
+        }
+      }
+    };
+
+    fetchGuestData();
+  }, [fullPhoneNumber]);
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -41,19 +78,6 @@ const EmailCapture = () => {
     businessType === "Corporate" && businessPlan === "Starter";
 
   const isFormValid = isValidEmail;
-
-  // ✅ Split country code + phone number
-  const extractPhoneData = (phone) => {
-    if (!phone) return {};
-
-    const cleaned = phone.replace("+", "");
-
-    // Example: +919876543210
-    const phoneCountryCode = cleaned.slice(0, 2); // adjust if needed
-    const phoneNumber = cleaned.slice(2);
-
-    return { phoneCountryCode, phoneNumber };
-  };
 
   const handleContinue = async () => {
     if (!isFormValid || !fullPhoneNumber) return;

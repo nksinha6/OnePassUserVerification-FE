@@ -357,7 +357,7 @@ const Consent = () => {
           language === "hi" ? "मैं स्वीकार करता हूँ" : "I Accept"
         ) : (
           <>
-            {language === "hi" ? "सहमत हों और जारी रखें" : CONSENT_UI.CONTINUE_BUTTON}
+            {language === "hi" ? "सुरक्षित रूप से आगे बढ़ें" : CONSENT_UI.CONTINUE_BUTTON}
             <Lock size={18} /> {/* ✅ Lock icon added */}
           </>
         )}

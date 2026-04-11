@@ -6,6 +6,7 @@ import ProgressBar from "../Components/ProgressBar";
 import { VERIFICATION_UI } from "../constants/ui";
 import aadhaarService from "../services/aadhaarService"; // ✅ IMPORT SERVICE
 import { persistGuestRegister } from "../services/guestService";
+import digilockerService from "../services/digilockerService";
 
 const VerificationCodePage = () => {
   const navigate = useNavigate();
@@ -126,6 +127,15 @@ const VerificationCodePage = () => {
     const fetchAndPersist = async () => {
       try {
         console.log("📡 Calling Aadhaar API...");
+
+        const digilockerResponse = await digilockerService.persistDigilockerIds(
+          String(verificationId),
+          String(referenceId),
+          phoneCode,
+          phoneNumber,
+        );
+
+        console.log("Digilocker IDS Response", digilockerResponse);
 
         const aadhaarData = await aadhaarService.getAadhaarData(
           String(verificationId),

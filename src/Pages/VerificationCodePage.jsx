@@ -22,8 +22,13 @@ const VerificationCodePage = () => {
     if (hasCalledOtp.current) return; // 🚫 stop second call
     hasCalledOtp.current = true;
 
-    const phoneCode = sessionStorage.getItem("phoneCountryCode") || "91";
-    const phoneNumber = sessionStorage.getItem("phoneNumber");
+    const phoneCode =
+      sessionStorage.getItem("phoneCountryCode") ||
+      sessionStorage.getItem("visitorCountryCode") ||
+      "91";
+    const phoneNumber =
+      sessionStorage.getItem("phoneNumber") ||
+      sessionStorage.getItem("visitorPhoneNumber");
 
     if (!phoneNumber) {
       console.warn("❌ Phone number missing, OTP API skipped");

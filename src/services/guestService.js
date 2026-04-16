@@ -110,9 +110,33 @@ export const updateGuestProfile = async (id, name, organization) => {
     return null;
   }
 };
+
+/**
+ * Persist OTP for a guest
+ * @param {string} phoneCountryCode
+ * @param {string} phoneNumber
+ * @param {string} otp
+ * @returns {Promise<Object|null>}
+ */
+export const persistOtp = async (phoneCountryCode, phoneNumber, otp) => {
+  try {
+    const response = await api.post(ENDPOINTS.PERSIST_OTP, {
+      phoneCountryCode,
+      phoneNumber,
+      otp,
+    });
+
+    return response?.data || null;
+  } catch (error) {
+    console.error("Persist OTP Error:", error.message);
+    return null;
+  }
+};
+
 export default {
   getGuestByPhone,
   updateGuestEmail,
   persistGuestRegister,
   updateGuestProfile,
+  persistOtp,
 };

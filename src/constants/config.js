@@ -12,6 +12,7 @@ export const ENDPOINTS = {
   PERSIST_GUEST_REGISTER: "/guest/persist/status",
   UPDATE_GUEST_PROFILE: "/guest/persist/profile/update",
   PERSIST_DIGILOCKER_IDS: "/guest/persist/digilocker_ids",
+  PERSIST_OTP: "/guest/persist/otp",
 };
 
 export default ENDPOINTS;

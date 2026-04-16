@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileHeader from "../Components/MobileHeader";
 import ProgressBar from "../Components/ProgressBar";
 import { VERIFICATION_UI } from "../constants/ui";
 import aadhaarService from "../services/aadhaarService"; // ✅ IMPORT SERVICE
-import { persistGuestRegister } from "../services/guestService";
+import guestService, { persistGuestRegister } from "../services/guestService";
 import digilockerService from "../services/digilockerService";
 
 const VerificationCodePage = () => {
@@ -15,6 +15,40 @@ const VerificationCodePage = () => {
   const [businessType, setBusinessType] = useState("");
   const [businessPlan, setBusinessPlan] = useState("");
   const [isUserVerified, setIsUserVerified] = useState(false);
+
+  const hasCalledOtp = useRef(false);
+
+  useEffect(() => {
+    if (hasCalledOtp.current) return; // 🚫 stop second call
+    hasCalledOtp.current = true;
+
+    const phoneCode = sessionStorage.getItem("phoneCountryCode") || "91";
+    const phoneNumber = sessionStorage.getItem("phoneNumber");
+
+    if (!phoneNumber) {
+      console.warn("❌ Phone number missing, OTP API skipped");
+      return;
+    }
+
+    const randomNumber = Math.floor(100000 + Math.random() * 900000);
+    const otp = String(randomNumber);
+
+    const formatted = `${otp.slice(0, 3)} ${otp.slice(3)}`;
+    setCode(formatted);
+
+    const callOtpApi = async () => {
+      try {
+        console.log("📡 Calling OTP Persist API...");
+        await guestService.persistOtp(phoneCode, phoneNumber, otp);
+        console.log("✅ OTP persisted successfully");
+        sessionStorage.setItem("generatedOtp", otp);
+      } catch (error) {
+        console.error("❌ OTP API failed:", error);
+      }
+    };
+
+    callOtpApi();
+  }, []);
 
   useEffect(() => {
     console.log("🚀 VerificationCodePage mounted");
@@ -31,7 +65,7 @@ const VerificationCodePage = () => {
     //   .toString()
     //   .slice(3)}`;
     // setCode(formatted);
-    setCode("123 456");
+    // setCode("123 456");
 
     // 🔹 Load Business Data
     const typeRaw = sessionStorage.getItem("businessType");

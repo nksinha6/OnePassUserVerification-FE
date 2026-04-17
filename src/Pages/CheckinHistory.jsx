@@ -15,7 +15,8 @@ const CheckinHistory = () => {
     const fetchHistory = async () => {
       try {
         const phoneCountryCode =
-          sessionStorage.getItem("phoneCountryCode") || "91";
+          sessionStorage.getItem("phoneCountryCode") ||
+          sessionStorage.getItem("visitorPhoneCountryCode") || "91";
 
         const phoneNumber =
           sessionStorage.getItem("phoneNumber") ||

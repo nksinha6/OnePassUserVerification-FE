@@ -16,7 +16,8 @@ const CheckinHistory = () => {
       try {
         const phoneCountryCode =
           sessionStorage.getItem("phoneCountryCode") ||
-          sessionStorage.getItem("visitorPhoneCountryCode") || "91";
+          sessionStorage.getItem("visitorPhoneCountryCode") ||
+          "91";
 
         const phoneNumber =
           sessionStorage.getItem("phoneNumber") ||
@@ -25,7 +26,7 @@ const CheckinHistory = () => {
         // ✅ Only fetch bookings
         const bookings = await guestService.getAllBookings(
           phoneCountryCode,
-          phoneNumber
+          phoneNumber,
         );
 
         setHistory(bookings || []);
@@ -75,8 +76,18 @@ const CheckinHistory = () => {
               const [day, month, year, hour, min] = dateStr.split(":");
 
               const months = [
-                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
               ];
 
               const monthName = months[parseInt(month, 10) - 1];

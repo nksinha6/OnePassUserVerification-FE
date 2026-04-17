@@ -133,10 +133,32 @@ export const persistOtp = async (phoneCountryCode, phoneNumber, otp) => {
   }
 };
 
+export const getAllBookings = async (phoneCountryCode, phoneNumber) => {
+  try {
+    const response = await api.get(ENDPOINTS.All_BOOKINGS, {
+      params: {
+        phoneCountryCode,
+        phoneNumber, // ⚠️ match backend param name exactly
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.log("No bookings found");
+      return [];
+    }
+
+    console.error("Error fetching bookings:", error);
+    return [];
+  }
+};
+
 export default {
   getGuestByPhone,
   updateGuestEmail,
   persistGuestRegister,
   updateGuestProfile,
   persistOtp,
+  getAllBookings,
 };

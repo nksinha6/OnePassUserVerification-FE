@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import MobileHeader from "../Components/MobileHeader";
 import { HISTORY_UI } from "../constants/ui";
 import guestService from "../services/guestService";
-import tenantService from "../services/tenantService";
 
 const CheckinHistory = () => {
   const navigate = useNavigate();
@@ -17,57 +16,18 @@ const CheckinHistory = () => {
       try {
         const phoneCountryCode =
           sessionStorage.getItem("phoneCountryCode") || "91";
+
         const phoneNumber =
           sessionStorage.getItem("phoneNumber") ||
           sessionStorage.getItem("visitorPhoneNumber");
 
-        // 1. Get all bookings
+        // ✅ Only fetch bookings
         const bookings = await guestService.getAllBookings(
           phoneCountryCode,
-          phoneNumber,
+          phoneNumber
         );
 
-        // 2. Get unique IDs
-        const uniqueTenantIds = [
-          ...new Set(bookings.map((b) => Number(b.tenantId))),
-        ];
-
-        // 3. Fetch all tenants in parallel
-        const tenantResponses = await Promise.all(
-          uniqueTenantIds.map(async (id) => {
-            try {
-              const res = await tenantService.getTenantById(id);
-              return { id, data: res?.data || res || null };
-            } catch (err) {
-              console.error(`Failed to fetch tenant ${id}`, err);
-              return { id, data: null };
-            }
-          }),
-        );
-
-        const tenantMap = tenantResponses.reduce((acc, { id, data }) => {
-          if (data) acc[id] = data;
-          return acc;
-        }, {});
-
-        // 5. ATTACH LOGOS BY MATCHING tenantId
-        const enrichedBookings = bookings.map((booking) => {
-          const tenantData = tenantMap[booking.tenantId];
-
-          const logoBase64 = tenantData?.logo;
-          const contentType = tenantData?.logoContentType || "image/png";
-
-          return {
-            ...booking,
-            tenantLogo: logoBase64
-              ? logoBase64.startsWith("data:")
-                ? logoBase64
-                : `data:${contentType};base64,${logoBase64}`
-              : null,
-          };
-        });
-
-        setHistory(enrichedBookings);
+        setHistory(bookings || []);
       } catch (error) {
         console.error("Error fetching history:", error);
       } finally {
@@ -105,7 +65,7 @@ const CheckinHistory = () => {
         <p className="text-sm text-gray-500">Loading...</p>
       ) : (
         <div className="space-y-4">
-          {history.map((item, index) => {
+          {history.map((item) => {
             const datePart = item.bookingId?.split("-##-")[1];
 
             const formatDate = (dateStr) => {
@@ -113,28 +73,14 @@ const CheckinHistory = () => {
 
               const [day, month, year, hour, min] = dateStr.split(":");
 
-              // 🔹 Month names
               const months = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
               ];
 
               const monthName = months[parseInt(month, 10) - 1];
-
-              // 🔹 Short year (2026 → 26)
               const shortYear = year.slice(-2);
 
-              // 🔹 Convert to 12-hour format
               let h = parseInt(hour, 10);
               const ampm = h >= 12 ? "PM" : "AM";
 
@@ -152,36 +98,22 @@ const CheckinHistory = () => {
                 className="flex items-center justify-between border-b border-gray-100 pb-4"
               >
                 <div className="flex items-center gap-3">
-                  {/* <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                  {/* ✅ Default icon only */}
+                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
                     <Building2 size={18} className="text-brand" />
-                  </div> */}
-
-                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
-                    {item.tenantLogo ? (
-                      <img
-                        src={item.tenantLogo}
-                        alt="logo"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Building2 size={18} className="text-brand" />
-                    )}
                   </div>
 
                   <div>
-                    {/* ✅ Property Name */}
                     <h4 className="text-sm font-semibold">
                       {item.propertyName || "Unknown Location"}
                     </h4>
 
-                    {/* ✅ OTA + Date */}
                     <p className="text-xs text-gray-500">
                       {item.ota || "Visit"} • {formatDate(datePart)}
                     </p>
                   </div>
                 </div>
 
-                {/* Status */}
                 <span className="text-[10px] font-semibold px-3 py-1 rounded-full bg-green-100 text-green-600">
                   COMPLETED
                 </span>
@@ -192,14 +124,6 @@ const CheckinHistory = () => {
       )}
 
       <div className="flex-1" />
-
-      {/* Done Button
-      <button
-        onClick={() => navigate("/")}
-        className="w-full h-14 bg-brand text-white rounded-[6px] font-semibold hover:opacity-90 transition mt-6"
-      >
-        {HISTORY_UI.DONE_BUTTON}
-      </button> */}
     </div>
   );
 };

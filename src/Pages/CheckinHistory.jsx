@@ -1,17 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Building2, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileHeader from "../Components/MobileHeader";
 import { HISTORY_UI } from "../constants/ui";
 import guestService from "../services/guestService";
+import tenantService from "../services/tenantService";
 
 const CheckinHistory = () => {
   const navigate = useNavigate();
+
+  const hasBookingsFetched = useRef(false);
 
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (hasBookingsFetched.current) return;
+    hasBookingsFetched.current = true;
     const fetchHistory = async () => {
       try {
         const phoneCountryCode =
@@ -29,7 +34,40 @@ const CheckinHistory = () => {
           phoneNumber,
         );
 
-        setHistory(bookings || []);
+        if (!bookings || bookings.length === 0) {
+          setHistory([]);
+          return;
+        }
+
+        const enrichedBookings = await Promise.all(
+          bookings.map(async (booking) => {
+            try {
+              console.log("Calling tenant API with ID:", booking.tenantId);
+              const tenantResponse = await tenantService.getTenantById(
+                booking.tenantId,
+              );
+              console.log("Response tenant ID:", tenantResponse.id);
+
+              return {
+                ...booking,
+                tenantData: tenantResponse || null, // attach full response
+              };
+            } catch (err) {
+              console.error(
+                `Error fetching tenant for ID ${booking.tenantId}:`,
+                err,
+              );
+              return {
+                ...booking,
+                tenantData: null,
+              };
+            }
+          }),
+        );
+
+        console.log(enrichedBookings);
+
+        setHistory(enrichedBookings);
       } catch (error) {
         console.error("Error fetching history:", error);
       } finally {
@@ -68,6 +106,10 @@ const CheckinHistory = () => {
       ) : (
         <div className="space-y-4">
           {history.map((item) => {
+            const logoSrc = item.tenantData?.logo
+              ? `data:${item.tenantData.logoContentType};base64,${item.tenantData.logo}`
+              : null;
+
             const datePart = item.bookingId?.split("-##-")[1];
 
             const formatDate = (dateStr) => {
@@ -111,8 +153,16 @@ const CheckinHistory = () => {
               >
                 <div className="flex items-center gap-3">
                   {/* ✅ Default icon only */}
-                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                    <Building2 size={18} className="text-brand" />
+                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
+                    {logoSrc ? (
+                      <img
+                        src={logoSrc}
+                        alt="tenant logo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Building2 size={18} className="text-brand" />
+                    )}
                   </div>
 
                   <div>

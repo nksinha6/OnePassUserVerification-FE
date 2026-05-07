@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ArrowLeft, ShieldCheck, ScanLine } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileHeader from "../Components/MobileHeader";
@@ -7,7 +7,7 @@ const ConfirmPassportDetails = () => {
   const navigate = useNavigate();
 
   // ✅ Dummy extracted data
-  const passportData = {
+  const [passportData, setPassportData] = useState({
     type: "P",
     countryCode: "GBR",
     surname: "STERLING",
@@ -21,7 +21,7 @@ const ConfirmPassportDetails = () => {
     issueDate: "24-11-2021",
     expiryDate: "24-11-2031",
     address: "12-15 Kensington High Street, London, W8 5NP, United Kingdom",
-  };
+  });
 
   return (
     <div className="h-dvh bg-[#f5f5f5] flex flex-col px-4 py-5">
@@ -83,14 +83,27 @@ const ConfirmPassportDetails = () => {
 
             {/* TYPE + COUNTRY */}
             <div className="grid grid-cols-2 gap-4 mt-3">
-              <Field label="TYPE" value={passportData.type} />
+              <Field
+                label="TYPE"
+                field="type"
+                value={passportData.type}
+                passportData={passportData}
+                setPassportData={setPassportData}
+              />
 
               <Field label="COUNTRY CODE" value={passportData.countryCode} />
             </div>
 
             {/* SURNAME */}
             <div className="mt-3">
-              <Field full label="SURNAME" value={passportData.surname} />
+              <Field
+                full
+                label="SURNAME"
+                field="surname"
+                value={passportData.surname}
+                passportData={passportData}
+                setPassportData={setPassportData}
+              />
             </div>
 
             {/* GIVEN NAMES */}
@@ -98,7 +111,10 @@ const ConfirmPassportDetails = () => {
               <Field
                 full
                 label="GIVEN NAME(S)"
+                field="givenNames"
                 value={passportData.givenNames}
+                passportData={passportData}
+                setPassportData={setPassportData}
               />
             </div>
 
@@ -107,20 +123,42 @@ const ConfirmPassportDetails = () => {
               <Field
                 full
                 label="PASSPORT NUMBER"
+                field="passportNumber"
                 value={passportData.passportNumber}
+                passportData={passportData}
+                setPassportData={setPassportData}
               />
             </div>
 
             {/* NATIONALITY + GENDER */}
             <div className="grid grid-cols-2 gap-4 mt-3">
-              <Field label="NATIONALITY" value={passportData.nationality} />
+              <Field
+                label="NATIONALITY"
+                field="nationality"
+                value={passportData.nationality}
+                passportData={passportData}
+                setPassportData={setPassportData}
+              />
 
-              <Field label="SEX / GENDER" value={passportData.gender} />
+              <Field
+                label="SEX / GENDER"
+                field="gender"
+                value={passportData.gender}
+                passportData={passportData}
+                setPassportData={setPassportData}
+              />
             </div>
 
             {/* DOB */}
             <div className="mt-3">
-              <Field full label="DATE OF BIRTH" value={passportData.dob} />
+              <Field
+                full
+                label="DATE OF BIRTH"
+                field="dob"
+                value={passportData.dob}
+                passportData={passportData}
+                setPassportData={setPassportData}
+              />
             </div>
 
             {/* PLACE OF BIRTH */}
@@ -128,7 +166,10 @@ const ConfirmPassportDetails = () => {
               <Field
                 full
                 label="PLACE OF BIRTH"
+                field="placeOfBirth"
                 value={passportData.placeOfBirth}
+                passportData={passportData}
+                setPassportData={setPassportData}
               />
             </div>
 
@@ -137,15 +178,30 @@ const ConfirmPassportDetails = () => {
               <Field
                 full
                 label="PLACE OF ISSUE"
+                field="placeOfIssue"
                 value={passportData.placeOfIssue}
+                passportData={passportData}
+                setPassportData={setPassportData}
               />
             </div>
 
             {/* ISSUE + EXPIRY */}
             <div className="grid grid-cols-2 gap-4 mt-3">
-              <Field label="DATE OF ISSUE" value={passportData.issueDate} />
+              <Field
+                label="DATE OF ISSUE"
+                field="issueDate"
+                value={passportData.issueDate}
+                passportData={passportData}
+                setPassportData={setPassportData}
+              />
 
-              <Field label="DATE OF EXPIRY" value={passportData.expiryDate} />
+              <Field
+                label="DATE OF EXPIRY"
+                field="expiryDate"
+                value={passportData.expiryDate}
+                passportData={passportData}
+                setPassportData={setPassportData}
+              />
             </div>
 
             {/* ADDRESS */}
@@ -154,7 +210,10 @@ const ConfirmPassportDetails = () => {
                 full
                 multiline
                 label="ADDRESS DETAILS"
+                field="address"
                 value={passportData.address}
+                passportData={passportData}
+                setPassportData={setPassportData}
               />
             </div>
           </div>
@@ -193,21 +252,63 @@ const ConfirmPassportDetails = () => {
 };
 
 // ✅ FIELD COMPONENT
-const Field = ({ label, value, full, multiline }) => {
+const Field = ({
+  label,
+  value,
+  field,
+  passportData,
+  setPassportData,
+  full,
+  multiline,
+}) => {
   return (
     <div className={full ? "w-full" : ""}>
+      {/* LABEL */}
       <p className="text-[10px] tracking-[2px] text-[#444] mb-2">{label}</p>
 
-      <div
-        className={`
-          bg-[#dfe5e5]
-          rounded-[6px]
-          px-4
-          ${multiline ? "py-4 min-h-[78px]" : "h-10 flex items-center"}
-        `}
-      >
-        <p className="text-[12px] text-[#172b29] ">{value}</p>
-      </div>
+      {/* INPUT */}
+      {multiline ? (
+        <textarea
+          value={value}
+          onChange={(e) =>
+            setPassportData({
+              ...passportData,
+              [field]: e.target.value,
+            })
+          }
+          rows={3}
+          className="
+            w-full
+            bg-[#dfe5e5]
+            rounded-[6px]
+            px-4 py-3
+            text-[12px]
+            text-[#172b29]
+            outline-none
+            resize-none
+          "
+        />
+      ) : (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) =>
+            setPassportData({
+              ...passportData,
+              [field]: e.target.value,
+            })
+          }
+          className="
+            w-full h-10
+            bg-[#dfe5e5]
+            rounded-[6px]
+            px-4
+            text-[12px]
+            text-[#172b29]
+            outline-none
+          "
+        />
+      )}
     </div>
   );
 };

@@ -24,28 +24,28 @@ const ConfirmPassportDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] flex flex-col px-4 py-5">
+    <div className="h-dvh bg-[#f5f5f5] flex flex-col px-4 py-5">
       <MobileHeader />
 
       {/* CONTENT */}
-      <div className="flex-1 overflow-y-auto px-5 py-6">
+      <div className="flex-1 overflow-y-auto px-0 py-1">
         {/* TITLE */}
-        <h2 className="text-[44px] leading-[48px] font-bold text-[#172b29]">
+        <h2 className="text-md font-bold text-[#172b29]">
           Verify extracted information
         </h2>
 
-        <p className="mt-5 text-[16px] leading-[32px] text-[#5f6368]">
+        <p className="mt-2 text-sm text-[#5f6368]">
           We've extracted the following details from your passport. Please
           verify them before proceeding.
         </p>
 
         {/* CARD */}
-        <div className="mt-8 rounded-[16px] overflow-hidden bg-white shadow-sm">
+        <div className="mt-3 rounded-[10px] overflow-hidden bg-white shadow-sm">
           {/* OCR HEADER */}
-          <div className="bg-[#e8eceb] px-5 py-4 flex items-center gap-2">
+          <div className="bg-[#e8eceb] px-4 py-5 flex items-center gap-2">
             <ShieldCheck size={16} className="text-[#50675f]" />
 
-            <p className="text-[#50675f] text-[12px] font-bold tracking-[2px]">
+            <p className="text-[#50675f] text-xs font-bold tracking-[2px]">
               OCR CONFIDENCE: HIGH
             </p>
           </div>
@@ -56,11 +56,11 @@ const ConfirmPassportDetails = () => {
             <div className="grid grid-cols-2 gap-4">
               {/* PHOTO */}
               <div>
-                <p className="text-[10px] tracking-[2px] text-[#444] mb-2">
+                <p className="text-[10px] tracking-[2px] text-[#444] mb-1">
                   PHOTOGRAPH
                 </p>
 
-                <div className="h-[140px] rounded-[6px] bg-[#dfe5e5] overflow-hidden">
+                <div className="h-[120px] rounded-[6px] bg-[#dfe5e5] overflow-hidden">
                   <img
                     src="https://placehold.co/300x400"
                     alt="Passport Photo"
@@ -71,30 +71,30 @@ const ConfirmPassportDetails = () => {
 
               {/* SIGNATURE */}
               <div>
-                <p className="text-[10px] tracking-[2px] text-[#444] mb-2">
+                <p className="text-[10px] tracking-[2px] text-[#444] mb-1">
                   SIGNATURE
                 </p>
 
-                <div className="h-[140px] rounded-[6px] bg-[#dfe5e5] flex items-center justify-center">
+                <div className="h-[120px] rounded-[6px] bg-[#dfe5e5] flex items-center justify-center">
                   <div className="w-[40px] h-[80px] bg-[#cfd6d6]" />
                 </div>
               </div>
             </div>
 
             {/* TYPE + COUNTRY */}
-            <div className="grid grid-cols-2 gap-4 mt-6">
+            <div className="grid grid-cols-2 gap-4 mt-3">
               <Field label="TYPE" value={passportData.type} />
 
               <Field label="COUNTRY CODE" value={passportData.countryCode} />
             </div>
 
             {/* SURNAME */}
-            <div className="mt-5">
+            <div className="mt-3">
               <Field full label="SURNAME" value={passportData.surname} />
             </div>
 
             {/* GIVEN NAMES */}
-            <div className="mt-5">
+            <div className="mt-3">
               <Field
                 full
                 label="GIVEN NAME(S)"
@@ -103,7 +103,7 @@ const ConfirmPassportDetails = () => {
             </div>
 
             {/* PASSPORT NUMBER */}
-            <div className="mt-5">
+            <div className="mt-3">
               <Field
                 full
                 label="PASSPORT NUMBER"
@@ -112,19 +112,19 @@ const ConfirmPassportDetails = () => {
             </div>
 
             {/* NATIONALITY + GENDER */}
-            <div className="grid grid-cols-2 gap-4 mt-5">
+            <div className="grid grid-cols-2 gap-4 mt-3">
               <Field label="NATIONALITY" value={passportData.nationality} />
 
               <Field label="SEX / GENDER" value={passportData.gender} />
             </div>
 
             {/* DOB */}
-            <div className="mt-5">
+            <div className="mt-3">
               <Field full label="DATE OF BIRTH" value={passportData.dob} />
             </div>
 
             {/* PLACE OF BIRTH */}
-            <div className="mt-5">
+            <div className="mt-3">
               <Field
                 full
                 label="PLACE OF BIRTH"
@@ -133,7 +133,7 @@ const ConfirmPassportDetails = () => {
             </div>
 
             {/* PLACE OF ISSUE */}
-            <div className="mt-5">
+            <div className="mt-3">
               <Field
                 full
                 label="PLACE OF ISSUE"
@@ -142,14 +142,14 @@ const ConfirmPassportDetails = () => {
             </div>
 
             {/* ISSUE + EXPIRY */}
-            <div className="grid grid-cols-2 gap-4 mt-5">
+            <div className="grid grid-cols-2 gap-4 mt-3">
               <Field label="DATE OF ISSUE" value={passportData.issueDate} />
 
               <Field label="DATE OF EXPIRY" value={passportData.expiryDate} />
             </div>
 
             {/* ADDRESS */}
-            <div className="mt-5">
+            <div className="mt-3">
               <Field
                 full
                 multiline
@@ -161,7 +161,7 @@ const ConfirmPassportDetails = () => {
         </div>
 
         {/* BUTTONS */}
-        <div className="mt-10 space-y-4">
+        <div className="mt-5 space-y-4">
           {/* CONFIRM */}
           <button
             className="
@@ -203,10 +203,10 @@ const Field = ({ label, value, full, multiline }) => {
           bg-[#dfe5e5]
           rounded-[6px]
           px-4
-          ${multiline ? "py-4 min-h-[78px]" : "h-14 flex items-center"}
+          ${multiline ? "py-4 min-h-[78px]" : "h-10 flex items-center"}
         `}
       >
-        <p className="text-[18px] text-[#172b29] leading-[28px]">{value}</p>
+        <p className="text-[12px] text-[#172b29] ">{value}</p>
       </div>
     </div>
   );

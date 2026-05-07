@@ -192,5 +192,6 @@ export const ROUTES = {
   PROFILE: "profile",
   ID_VERIFICATION: "id-verification",
   PASSPORT_MANUAL_VERIFICATION: "passport-manual-verification",
+  CONFIRM_PASSPORT_DETAILS: "confirm-passport-details",
   PASSPORT_READING: "passport-reading",
 };

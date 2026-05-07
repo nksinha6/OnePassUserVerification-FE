@@ -16,6 +16,7 @@ import MyProfile from "./Pages/MyProfile.jsx";
 import IdVerification from "./Pages/IdVerification.jsx";
 import ParamGuard from "./Components/ParamGuard";
 import PassportManualVerification from "./Pages/PassportManualVerification.jsx";
+import ConfirmPassportDetails from "./Pages/ConfirmPassportDetails.jsx";
 import PassportReading from "./Pages/PassportReading.jsx";
 import { ROUTES } from "./constants/ui.js";
 
@@ -53,6 +54,10 @@ const AppRoutes = () => {
           <Route
             path={ROUTES.PASSPORT_MANUAL_VERIFICATION}
             element={<PassportManualVerification />}
+          />
+          <Route
+            path={ROUTES.CONFIRM_PASSPORT_DETAILS}
+            element={<ConfirmPassportDetails />}
           />
 
           <Route path={ROUTES.PASSPORT_READING} element={<PassportReading />} />

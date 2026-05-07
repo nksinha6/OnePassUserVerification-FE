@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 const PassportManualVerification = () => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
-  //   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [flashOn, setFlashOn] = useState(false);
 
@@ -26,15 +26,12 @@ const PassportManualVerification = () => {
   useEffect(() => {
     if (!isProcessing) return;
 
-    // ✅ Progress Bar Animation
+    // ✅ Progress Animation
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
+        // stop at 100
         if (prev >= 100) {
           clearInterval(progressInterval);
-
-          // navigate next screen here
-          // navigate("/face-match");
-
           return 100;
         }
 
@@ -70,6 +67,16 @@ const PassportManualVerification = () => {
       clearInterval(scanInterval);
     };
   }, [isProcessing, scanDirection]);
+
+  useEffect(() => {
+    if (progress !== 100) return;
+
+    const timer = setTimeout(() => {
+      navigate("/confirm-passport-details");
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [progress, navigate]);
 
   // 🎥 START CAMERA
   const startCamera = async () => {

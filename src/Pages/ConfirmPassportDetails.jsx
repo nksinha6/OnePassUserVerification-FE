@@ -4,7 +4,33 @@ import { useNavigate } from "react-router-dom";
 import MobileHeader from "../Components/MobileHeader";
 
 const ConfirmPassportDetails = () => {
+  const businessType = (
+    sessionStorage.getItem("businessType") || "Hospitality"
+  ).toLowerCase();
+  const businessPlan = (
+    sessionStorage.getItem("businessPlan") || "Starter"
+  ).toLowerCase();
   const navigate = useNavigate();
+
+  const handleConfirmContinue = () => {
+    // ✅ CORPORATE / HOSPITALITY + SMB
+    if (
+      (businessType === "corporate" || businessType === "hospitality") &&
+      businessPlan === "smb"
+    ) {
+      navigate("/verification-code");
+      return;
+    }
+
+    // ✅ CORPORATE / HOSPITALITY + ENTERPRISE
+    if (
+      (businessType === "corporate" || businessType === "hospitality") &&
+      businessPlan === "enterprise"
+    ) {
+      navigate("/face-match");
+      return;
+    }
+  };
 
   // ✅ Dummy extracted data
   const [passportData, setPassportData] = useState({
@@ -223,11 +249,12 @@ const ConfirmPassportDetails = () => {
         <div className="mt-5 space-y-4">
           {/* CONFIRM */}
           <button
+            onClick={handleConfirmContinue}
             className="
-            w-full h-14 rounded-[6px]
-            bg-[#1B3631]
-            text-white text-[18px] font-semibold
-          "
+  w-full h-14 rounded-[6px]
+  bg-[#1B3631]
+  text-white text-[18px] font-semibold
+"
           >
             Confirm and Continue
           </button>

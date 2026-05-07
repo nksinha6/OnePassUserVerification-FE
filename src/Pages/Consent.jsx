@@ -73,6 +73,10 @@ const Consent = () => {
   // 🔥 MAIN CONTINUE HANDLER
   const handleContinue = async () => {
     try {
+      const digiLockerIds = ["aadhaar"];
+
+      const shouldSkipDigiLocker = !digiLockerIds.includes(selectedId);
+
       // ✅ 1️⃣ STARTER → DIRECT REDIRECT
       if (businessPlan === "Starter") {
         navigate("/verification-code");
@@ -86,6 +90,11 @@ const Consent = () => {
           return;
         }
 
+        if (shouldSkipDigiLocker) {
+          navigate("/passport-manual-verification"); // your screen
+          return;
+        }
+
         await startDigiLockerFlow();
         return;
       }
@@ -94,6 +103,11 @@ const Consent = () => {
       if (businessPlan === "Enterprise") {
         if (isVerifiedUser) {
           navigate("/face-match");
+          return;
+        }
+
+        if (shouldSkipDigiLocker) {
+          navigate("/passport-manual-verification"); // your screen
           return;
         }
 
@@ -110,7 +124,7 @@ const Consent = () => {
 
   // 🔐 DIGILOCKER FLOW
   const startDigiLockerFlow = async () => {
-    if (!["aadhaar", "passport", "voter", "dl"].includes(selectedId)) {
+    if (!["aadhaar"].includes(selectedId)) {
       return;
     }
 

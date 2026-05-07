@@ -96,9 +96,7 @@ const IdVerification = () => {
               Select an option
             </option>
             <option value="aadhaar">Aadhaar</option>
-            {/* <option value="passport">Passport</option>
-            <option value="voter">Voter ID</option>
-            <option value="dl">Driving License</option> */}
+            <option value="passport">Passport</option>
           </select>
         </div>
       </div>

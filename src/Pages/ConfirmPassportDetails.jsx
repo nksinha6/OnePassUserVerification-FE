@@ -261,13 +261,14 @@ const ConfirmPassportDetails = () => {
 
           {/* RESCAN */}
           <button
+            onClick={() => navigate("/Passport-Manual-verification")}
             className="
-            w-full h-14 rounded-[6px]
-            bg-[#e8eceb]
-            text-[#2e3c39]
-            text-[18px] font-medium
-            flex items-center justify-center gap-3
-          "
+  w-full h-14 rounded-[6px]
+  bg-[#e8eceb]
+  text-[#2e3c39]
+  text-[18px] font-medium
+  flex items-center justify-center gap-3
+"
           >
             <ScanLine size={18} />
             Re-scan Document

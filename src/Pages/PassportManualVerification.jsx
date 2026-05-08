@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Image as ImageIcon, Camera, Zap } from "lucide-react";
 import MobileHeader from "../Components/MobileHeader";
 import { useNavigate } from "react-router-dom";
 
@@ -7,8 +6,6 @@ const PassportManualVerification = () => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const navigate = useNavigate();
-
-  const [flashOn, setFlashOn] = useState(false);
 
   // ✅ FRONT / BACK STEP
   const [captureStep, setCaptureStep] = useState("front");
@@ -22,6 +19,8 @@ const PassportManualVerification = () => {
 
   const [scanPosition, setScanPosition] = useState(0);
   const [scanDirection, setScanDirection] = useState(1);
+
+  const [previewStep, setPreviewStep] = useState(null);
 
   useEffect(() => {
     if (!isProcessing) return;
@@ -119,7 +118,17 @@ const PassportManualVerification = () => {
     };
   }, []);
 
-  // 📸 CAPTURE IMAGE
+  useEffect(() => {
+    // reconnect stream whenever camera screen returns
+    if (!previewStep && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+
+      videoRef.current.play().catch((err) => {
+        console.log("Video play error:", err);
+      });
+    }
+  }, [previewStep, captureStep]);
+
   const captureImage = () => {
     const canvas = document.createElement("canvas");
 
@@ -132,36 +141,57 @@ const PassportManualVerification = () => {
 
     const image = canvas.toDataURL("image/png");
 
-    // ✅ FRONT CAPTURE
+    // FRONT CAPTURE
     if (captureStep === "front") {
       setFrontImage(image);
 
-      console.log("Front Captured");
-
-      // move to back capture
-      setCaptureStep("back");
+      // show preview first
+      setPreviewStep("front-preview");
 
       return;
     }
 
-    // ✅ BACK CAPTURE
+    // BACK CAPTURE
     if (captureStep === "back") {
       setBackImage(image);
 
-      console.log("Back Captured");
+      // show preview first
+      setPreviewStep("back-preview");
 
-      console.log({
-        front: frontImage,
-        back: image,
-      });
-
-      stopCamera();
-
-      //   navigate("/passport-reading");
-      setIsProcessing(true);
-
-      // navigate OR upload API here
+      return;
     }
+  };
+
+  const handleFrontNext = () => {
+    setPreviewStep(null);
+    setCaptureStep("back");
+  };
+
+  const handleBackSubmit = () => {
+    stopCamera();
+
+    setPreviewStep(null);
+
+    setIsProcessing(true);
+
+    console.log({
+      front: frontImage,
+      back: backImage,
+    });
+  };
+
+  const handleRescan = () => {
+    // FRONT RESCAN
+    if (previewStep === "front-preview") {
+      setFrontImage(null);
+    }
+
+    // BACK RESCAN
+    if (previewStep === "back-preview") {
+      setBackImage(null);
+    }
+
+    setPreviewStep(null);
   };
 
   const handleCancelProcessing = async () => {
@@ -185,6 +215,76 @@ const PassportManualVerification = () => {
     // ✅ restart camera
     await startCamera();
   };
+
+  if (previewStep) {
+    const isFrontPreview = previewStep === "front-preview";
+
+    return (
+      <div className="h-dvh overflow-y-auto bg-[#f5f5f5] px-4 py-5 flex flex-col">
+        <MobileHeader />
+
+        {/* TITLE */}
+        <div className="text-center mt-3">
+          <h2 className="text-[22px] font-bold text-[#1B3631]">
+            {isFrontPreview ? "Review Front Page" : "Review Back Page"}
+          </h2>
+
+          <p className="mt-2 text-sm text-[#5f6368] leading-6">
+            Please review the captured passport image before continuing.
+          </p>
+        </div>
+
+        {/* IMAGE PREVIEW */}
+        <div className="flex-1 flex items-center justify-center mt-6">
+          <div className="flex-1 flex flex-col justify-center">
+            <div
+              className="
+      relative rounded-[10px] overflow-hidden
+      h-[42vh]
+      min-h-[260px]
+      max-h-[420px]
+      bg-black shadow-xl
+    "
+            >
+              <img
+                src={isFrontPreview ? frontImage : backImage}
+                alt="passport-preview"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* BUTTONS */}
+        <div className="pb-4 mt-6 space-y-3">
+          {/* NEXT */}
+          <button
+            onClick={isFrontPreview ? handleFrontNext : handleBackSubmit}
+            className="
+            w-full h-14 rounded-[6px]
+            bg-[#1B3631]
+            text-white text-lg font-semibold
+          "
+          >
+            {isFrontPreview ? "Move to Next" : "Continue"}
+          </button>
+
+          {/* RESCAN */}
+          <button
+            onClick={handleRescan}
+            className="
+            w-full h-14 rounded-[6px]
+            text-[#1B3631]
+            text-lg font-semibold
+            bg-gray-200
+          "
+          >
+            Re-scan
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isProcessing) {
     return (
@@ -352,51 +452,11 @@ const PassportManualVerification = () => {
               </div>
             </>
           )}
-
-          {/* FLASH */}
-          {flashOn && (
-            <div className="absolute inset-0 bg-white/30 pointer-events-none" />
-          )}
         </div>
       </div>
 
       {/* BOTTOM SECTION */}
       <div className="shrink-0">
-        {/* CONTROLS */}
-        <div className="flex items-center justify-center gap-15 mt-5">
-          {/* GALLERY */}
-          <button className="w-11 h-11 rounded-[6px] bg-[#d9dcdf] flex items-center justify-center">
-            <ImageIcon size={18} className="text-[#5d6368]" />
-          </button>
-
-          {/* CAMERA */}
-          <button
-            onClick={captureImage}
-            className="
-            w-16 h-14 rounded-[6px]
-            bg-[#1B3631]
-            shadow-md flex items-center justify-center
-          "
-          >
-            <Camera size={24} className="text-white" />
-          </button>
-
-          {/* FLASH */}
-          <button
-            onClick={() => setFlashOn(!flashOn)}
-            className={`
-              w-11 h-11 rounded-[6px]
-              flex items-center justify-center
-              ${flashOn ? "bg-yellow-300" : "bg-[#d9dcdf]"}
-            `}
-          >
-            <Zap
-              size={18}
-              className={flashOn ? "text-yellow-700" : "text-[#5d6368]"}
-            />
-          </button>
-        </div>
-
         {/* MAIN BUTTON */}
         <button
           onClick={captureImage}

@@ -266,7 +266,7 @@ const PassportManualVerification = () => {
             text-white text-lg font-semibold
           "
           >
-            {isFrontPreview ? "Move to Next" : "Continue"}
+            {isFrontPreview ? "Next-Scan Back Page" : "Continue"}
           </button>
 
           {/* RESCAN */}
@@ -279,7 +279,7 @@ const PassportManualVerification = () => {
             bg-gray-200
           "
           >
-            Re-scan
+            Re-Scan
           </button>
         </div>
       </div>

@@ -256,7 +256,7 @@ const PassportManualVerification = () => {
         </div>
 
         {/* BUTTONS */}
-        <div className="pb-4 mt-6 space-y-3">
+        <div className="mt-6 space-y-3">
           {/* NEXT */}
           <button
             onClick={isFrontPreview ? handleFrontNext : handleBackSubmit}

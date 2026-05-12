@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import { ArrowLeft, ShieldCheck, ScanLine } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MobileHeader from "../Components/MobileHeader";
 
 const ConfirmPassportDetails = () => {
+  const location = useLocation();
+  const receivedPassportData = location.state?.passportData;
+  console.log("Received Passport Data", receivedPassportData);
+
   const businessType = (
     sessionStorage.getItem("businessType") || "Hospitality"
   ).toLowerCase();
@@ -34,19 +38,19 @@ const ConfirmPassportDetails = () => {
 
   // ✅ Dummy extracted data
   const [passportData, setPassportData] = useState({
-    type: "P",
-    countryCode: "GBR",
-    surname: "STERLING",
-    givenNames: "ALEXANDER JAMES",
-    passportNumber: "P98234105",
-    nationality: "BRITISH",
-    gender: "M",
-    dob: "12-05-1988",
-    placeOfBirth: "LONDON",
-    placeOfIssue: "HMPO",
-    issueDate: "24-11-2021",
-    expiryDate: "24-11-2031",
-    address: "12-15 Kensington High Street, London, W8 5NP, United Kingdom",
+    type: receivedPassportData?.passport_type,
+    countryCode: receivedPassportData?.country_code,
+    surname: receivedPassportData?.full_name?.split(" ")[1],
+    givenNames: receivedPassportData?.full_name?.split(" ")[0],
+    passportNumber: receivedPassportData?.passport_number,
+    nationality: receivedPassportData?.nationality,
+    gender: receivedPassportData?.gender,
+    dob: receivedPassportData?.dob,
+    placeOfBirth: receivedPassportData?.birth_place,
+    placeOfIssue: receivedPassportData?.place_of_issue,
+    issueDate: receivedPassportData?.issue_date,
+    expiryDate: receivedPassportData?.expiry_date,
+    address: receivedPassportData?.address,
   });
 
   return (

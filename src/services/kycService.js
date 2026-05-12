@@ -1,23 +1,34 @@
 // services/kycService.js
 
-export const uploadPassport = async (imageBase64) => {
+export const uploadPassport = async (front, back) => {
   try {
-    // base64 -> blob
-    const response = await fetch(imageBase64);
-
-    const blob = await response.blob();
-
-    // blob -> file
-    const file = new File([blob], "passport.png", {
-      type: "image/png",
-    });
-
-    // form data
     const formData = new FormData();
 
-    formData.append("file", file);
+    // Front image
+    if (front) {
+      const frontResponse = await fetch(front);
+      const frontBlob = await frontResponse.blob();
 
-    // api call
+      const frontFile = new File([frontBlob], "front-passport.png", {
+        type: "image/png",
+      });
+
+      formData.append("front", frontFile);
+    }
+
+    // Back image
+    if (back) {
+      const backResponse = await fetch(back);
+      const backBlob = await backResponse.blob();
+
+      const backFile = new File([backBlob], "back-passport.png", {
+        type: "image/png",
+      });
+
+      formData.append("back", backFile);
+    }
+
+    // API call
     const apiResponse = await fetch("/api/Kyc/passport", {
       method: "POST",
       body: formData,

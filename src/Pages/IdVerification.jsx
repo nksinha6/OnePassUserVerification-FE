@@ -15,50 +15,111 @@ const IdVerification = () => {
 
   const isValid = selectedId !== "";
 
+  // const handleProceed = async () => {
+  //   try {
+  //     setIsLoading(true);
+
+  //     // ✅ Get phone data from localStorage
+  //     const phoneNumber = sessionStorage.getItem("phoneNumber");
+  //     const countryCode = sessionStorage.getItem("phoneCountryCode"); // make sure you store this during login
+
+  //     if (!phoneNumber || !countryCode) {
+  //       alert("Phone details not found. Please login again.");
+  //       return;
+  //     }
+
+  //     // ✅ Generate verification ID
+  //     const verificationId =
+  //       "VER-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+
+  //     console.log("Generated Verification ID:", verificationId);
+
+  //     // ✅ Call API
+  //     const response = await verifyDigilockerAccount(
+  //       verificationId,
+  //       phoneNumber,
+  //     );
+
+  //     console.log("API Response:", response);
+
+  //     // ✅ Create single object
+  //     const digilockerData = {
+  //       verificationId,
+  //       countryCode,
+  //       phoneNumber,
+  //       digilockerResponse: response,
+  //     };
+
+  //     // ✅ Store in ONE localStorage key
+  //     sessionStorage.setItem("digilockerData", JSON.stringify(digilockerData));
+
+  //     // Optional: store selectedId if needed
+  //     sessionStorage.setItem("selectedId", selectedId);
+
+  //     // ✅ Navigate
+  //     navigate("/consent", {
+  //       state: { email, businessType, businessPlan },
+  //     });
+  //   } catch (error) {
+  //     alert(error.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleProceed = async () => {
     try {
       setIsLoading(true);
 
-      // ✅ Get phone data from localStorage
-      const phoneNumber = sessionStorage.getItem("phoneNumber");
-      const countryCode = sessionStorage.getItem("phoneCountryCode"); // make sure you store this during login
+      // ✅ Aadhaar flow
+      if (selectedId === "aadhaar") {
+        const phoneNumber = sessionStorage.getItem("phoneNumber");
+        const countryCode = sessionStorage.getItem("phoneCountryCode"); // make sure you store this during login
 
-      if (!phoneNumber || !countryCode) {
-        alert("Phone details not found. Please login again.");
-        return;
+        if (!phoneNumber || !countryCode) {
+          alert("Phone details not found. Please login again.");
+          return;
+        }
+
+        // ✅ Generate verification ID
+        const verificationId =
+          "VER-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+
+        console.log("Generated Verification ID:", verificationId);
+
+        // ✅ API CALL ONLY FOR AADHAAR
+        const response = await verifyDigilockerAccount(
+          verificationId,
+          phoneNumber,
+        );
+
+        console.log("API Response:", response);
+
+        // ✅ Store data
+        const digilockerData = {
+          verificationId,
+          countryCode,
+          phoneNumber,
+          digilockerResponse: response,
+        };
+
+        sessionStorage.setItem(
+          "digilockerData",
+          JSON.stringify(digilockerData),
+        );
       }
-
-      // ✅ Generate verification ID
-      const verificationId =
-        "VER-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-
-      console.log("Generated Verification ID:", verificationId);
-
-      // ✅ Call API
-      const response = await verifyDigilockerAccount(
-        verificationId,
-        phoneNumber,
-      );
-
-      console.log("API Response:", response);
-
-      // ✅ Create single object
-      const digilockerData = {
-        verificationId,
-        countryCode,
-        phoneNumber,
-        digilockerResponse: response,
-      };
-
-      // ✅ Store in ONE localStorage key
-      sessionStorage.setItem("digilockerData", JSON.stringify(digilockerData));
 
       // Optional: store selectedId if needed
       sessionStorage.setItem("selectedId", selectedId);
 
-      // ✅ Navigate
+      // ✅ Navigate for both Aadhaar & Passport
       navigate("/consent", {
-        state: { email, businessType, businessPlan },
+        state: {
+          email,
+          businessType,
+          businessPlan,
+          selectedId,
+        },
       });
     } catch (error) {
       alert(error.message);

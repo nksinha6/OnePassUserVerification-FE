@@ -22,7 +22,9 @@ const ConfirmPassportDetails = () => {
       (businessType === "corporate" || businessType === "hospitality") &&
       businessPlan === "smb"
     ) {
-      navigate("/verification-code");
+      navigate("/verification-code", {
+        state: { receivedPassportData },
+      });
       return;
     }
 

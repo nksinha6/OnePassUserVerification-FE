@@ -81,6 +81,7 @@ const MyProfile = () => {
     const fetchStarterEmail = async () => {
       try {
         const guestData = await getGuestByPhone(countryCode, phoneNumber);
+        console.log("Guest Data", guestData);
 
         if (guestData?.id) {
           sessionStorage.setItem("guestId", guestData.id);
@@ -111,6 +112,7 @@ const MyProfile = () => {
     const fetchFullProfileData = async () => {
       try {
         const guestData = await getGuestByPhone(countryCode, phoneNumber);
+        console.log("Guest Data", guestData);
 
         if (guestData) {
           let firstName = "";
@@ -118,8 +120,17 @@ const MyProfile = () => {
 
           if (guestData?.fullName) {
             const nameParts = guestData.fullName.trim().split(/\s+/);
-            firstName = nameParts[0] || "";
-            surname = nameParts.slice(2).join(" ") || "";
+            if (nameParts.length === 2) {
+              // Pooja Patel
+              firstName = nameParts[0] || "";
+              surname = nameParts[1] || "";
+            } else if (nameParts.length >= 3) {
+              // Mohmadhafiz mehabub shaikh
+              firstName = nameParts[0] || "";
+              surname = nameParts[2] || "";
+            } else {
+              firstName = nameParts[0] || "";
+            }
           }
 
           setForm((prev) => ({

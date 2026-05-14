@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { ShieldCheck } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MobileHeader from "../Components/MobileHeader";
 import ProgressBar from "../Components/ProgressBar";
 import { VERIFICATION_UI } from "../constants/ui";
@@ -10,6 +10,9 @@ import digilockerService from "../services/digilockerService";
 
 const VerificationCodePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const receivedPassportData = location.state?.receivedPassportData;
+  console.log(receivedPassportData);
 
   const [code, setCode] = useState("");
   const [businessType, setBusinessType] = useState("");
@@ -64,14 +67,6 @@ const VerificationCodePage = () => {
       isUserVerified,
     );
 
-    // 🔹 Generate Random Code
-    // const randomNumber = Math.floor(100000 + Math.random() * 900000);
-    // const formatted = `${randomNumber.toString().slice(0, 3)} ${randomNumber
-    //   .toString()
-    //   .slice(3)}`;
-    // setCode(formatted);
-    // setCode("123 456");
-
     // 🔹 Load Business Data
     const typeRaw = sessionStorage.getItem("businessType");
     const planRaw = sessionStorage.getItem("businessPlan");
@@ -106,32 +101,38 @@ const VerificationCodePage = () => {
       return;
     }
 
-    const digilockerRaw = sessionStorage.getItem("digilockerResponse");
+    const selectedId = sessionStorage.getItem("selectedId");
 
-    if (!digilockerRaw) {
-      console.warn("❌ digilockerResponse missing in localStorage");
-      return;
-    }
+    const isAadhaar = selectedId?.trim().toLowerCase() === "aadhaar";
 
-    let verificationId = null;
-    let referenceId = null;
+    let verificationId = "1";
+    let referenceId = "1";
 
-    try {
-      const parsed = JSON.parse(digilockerRaw);
+    // ✅ Aadhaar requires digilocker response
+    if (isAadhaar) {
+      const digilockerRaw = sessionStorage.getItem("digilockerResponse");
 
-      verificationId =
-        parsed?.verification_id || parsed?.verificationId || null;
+      if (!digilockerRaw) {
+        console.warn("❌ digilockerResponse missing for Aadhaar");
+        return;
+      }
 
-      referenceId =
-        parsed?.reference_id || parsed?.referenceId || verificationId;
-    } catch (err) {
-      console.error("❌ Invalid digilockerResponse JSON:", err);
-      return;
-    }
+      try {
+        const parsed = JSON.parse(digilockerRaw);
 
-    if (!verificationId) {
-      console.warn("❌ Verification ID missing");
-      return;
+        verificationId =
+          parsed?.verification_id || parsed?.verificationId || null;
+
+        referenceId = parsed?.reference_id || parsed?.referenceId || null;
+      } catch (err) {
+        console.error("❌ Invalid digilockerResponse JSON:", err);
+        return;
+      }
+
+      if (!verificationId || !referenceId) {
+        console.warn("❌ Verification or Reference ID missing");
+        return;
+      }
     }
 
     const phoneCode = sessionStorage.getItem("phoneCountryCode") || "+91";
@@ -167,88 +168,172 @@ const VerificationCodePage = () => {
       try {
         console.log("📡 Calling Aadhaar API...");
 
+        const selectedId = sessionStorage.getItem("selectedId"); // or wherever your selected id is stored
+
+        const finalVerificationId =
+          selectedId?.toLowerCase() === "passport"
+            ? "1"
+            : String(verificationId);
+
+        const finalReferenceId =
+          selectedId?.toLowerCase() === "passport" ? "1" : String(referenceId);
+
         const digilockerResponse = await digilockerService.persistDigilockerIds(
-          String(verificationId),
-          String(referenceId),
+          // String(verificationId),
+          finalVerificationId,
+          // String(referenceId),
+          finalReferenceId,
           phoneCode,
           phoneNumber,
         );
 
         console.log("Digilocker IDS Response", digilockerResponse);
 
-        const aadhaarData = await aadhaarService.getAadhaarData(
-          String(verificationId),
-          String(referenceId),
-          phoneCode,
-          phoneNumber,
-        );
+        let aadhaarData = null;
 
-        console.log("📥 Aadhaar API response:", aadhaarData);
+        // ✅ Call Aadhaar API only for Aadhaar
+        if (isAadhaar) {
+          aadhaarData = await aadhaarService.getAadhaarData(
+            String(verificationId),
+            String(referenceId),
+            phoneCode,
+            phoneNumber,
+          );
 
-        if (!aadhaarData) {
-          console.warn("⚠️ No Aadhaar data received");
-          return;
+          console.log("📥 Aadhaar API response:", aadhaarData);
+
+          if (!aadhaarData) {
+            console.warn("⚠️ No Aadhaar data received");
+            return;
+          }
         }
 
-        const country =
-          aadhaarData?.split_address?.country ||
-          aadhaarData?.splitAddress?.country;
+        if (isAadhaar) {
+          const country =
+            aadhaarData?.split_address?.country ||
+            aadhaarData?.splitAddress?.country;
 
-        const aadhaarUpdatePayload = {
-          Uid: aadhaarData?.uid || "",
-          PhoneCountryCode: phoneCode,
-          PhoneNumber: phoneNumber,
-          Name: aadhaarData?.name || "",
-          Gender: aadhaarData?.gender || "",
-          DateOfBirth: aadhaarData?.dob || aadhaarData?.dateOfBirth || "",
-          Nationality: country === "India" ? "Indian" : country || "",
-          VerificationId: String(verificationId),
-          ReferenceId: String(referenceId),
+          const aadhaarUpdatePayload = {
+            Uid: aadhaarData?.uid || "",
+            PhoneCountryCode: phoneCode,
+            PhoneNumber: phoneNumber,
+            Name: aadhaarData?.name || "",
+            Gender: aadhaarData?.gender || "",
+            DateOfBirth: aadhaarData?.dob || aadhaarData?.dateOfBirth || "",
+            Nationality: country === "India" ? "Indian" : country || "",
+            VerificationId: String(verificationId),
+            ReferenceId: String(referenceId),
 
-          SplitAddress: {
-            Country: aadhaarData?.split_address?.country || null,
-            State: aadhaarData?.split_address?.state || null,
-            Dist: aadhaarData?.split_address?.dist || null,
-            Subdist: aadhaarData?.split_address?.subdist || null,
-            Vtc: aadhaarData?.split_address?.vtc || null,
-            Po: aadhaarData?.split_address?.po || null,
-            Street: aadhaarData?.split_address?.street || null,
-            House: aadhaarData?.split_address?.house || null,
-            Landmark: aadhaarData?.split_address?.landmark || null,
-            Pincode: aadhaarData?.split_address?.pincode || null,
-          },
-        };
+            SplitAddress: {
+              Country: aadhaarData?.split_address?.country || null,
+              State: aadhaarData?.split_address?.state || null,
+              Dist: aadhaarData?.split_address?.dist || null,
+              Subdist: aadhaarData?.split_address?.subdist || null,
+              Vtc: aadhaarData?.split_address?.vtc || null,
+              Po: aadhaarData?.split_address?.po || null,
+              Street: aadhaarData?.split_address?.street || null,
+              House: aadhaarData?.split_address?.house || null,
+              Landmark: aadhaarData?.split_address?.landmark || null,
+              Pincode: aadhaarData?.split_address?.pincode || null,
+            },
+          };
 
-        await aadhaarService.persistAadhaarUpdate(aadhaarUpdatePayload);
+          await aadhaarService.persistAadhaarUpdate(aadhaarUpdatePayload);
+        } else {
+          const rawAddress = receivedPassportData?.address || "";
 
-        const aadhaarBase64 =
-          aadhaarData?.photo_link ||
-          aadhaarData?.image ||
-          aadhaarData?.profile_image;
+          const addressParts = rawAddress.split(",");
 
-        if (
-          aadhaarBase64 &&
-          (type === "corporate" || type === "hospitality") &&
-          plan === "enterprise"
-        ) {
-          const imageFile = base64ToFile(aadhaarBase64, "aadhaar.jpg");
+          const firstPart = addressParts[0]?.trim() || "";
 
-          if (imageFile) {
-            await aadhaarService.persistAadhaarImage(
-              phoneCode,
-              phoneNumber,
-              imageFile,
-            );
+          const words = firstPart.split(" ");
+
+          const house = words[0] || "";
+
+          const street = words.slice(1, 4).join(" ") || "";
+
+          const landmark = words.slice(4).join(" ") || "";
+
+          const formatDOB = (dob) => {
+            if (!dob) return "";
+
+            const date = new Date(dob);
+
+            const day = String(date.getDate()).padStart(2, "0");
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const year = date.getFullYear();
+
+            return `${day}-${month}-${year}`;
+          };
+
+          const objectToBase64 = (data) => {
+            return btoa(JSON.stringify(data));
+          };
+
+          const aadhaarUpdatePayload = {
+            Uid: objectToBase64(receivedPassportData) || "",
+            // uid: receivedPassportData?.passport_number || "",
+            PhoneCountryCode: phoneCode,
+            PhoneNumber: phoneNumber,
+            Name: receivedPassportData?.full_name || "",
+            Gender: receivedPassportData?.gender || "",
+            DateOfBirth: formatDOB(receivedPassportData?.dob) || "",
+            Nationality: receivedPassportData?.nationality || "",
+            VerificationId: String(verificationId),
+            ReferenceId: String(referenceId),
+
+            SplitAddress: {
+              Country:
+                receivedPassportData?.country_code === "IND"
+                  ? "India"
+                  : receivedPassportData?.country_code || "",
+              State: receivedPassportData?.birth_place || "",
+              Dist: "",
+              Subdist: "",
+              Vtc: "",
+              Po: "",
+              Street: street || "",
+              House: house || "",
+              Landmark: landmark || "null",
+              // Pincode: receivedPassportData || "",
+              Pincode: "",
+            },
+          };
+
+          await aadhaarService.persistAadhaarUpdate(aadhaarUpdatePayload);
+        }
+
+        if (isAadhaar) {
+          const aadhaarBase64 =
+            aadhaarData?.photo_link ||
+            aadhaarData?.image ||
+            aadhaarData?.profile_image;
+
+          if (
+            aadhaarBase64 &&
+            (type === "corporate" || type === "hospitality") &&
+            plan === "enterprise"
+          ) {
+            const imageFile = base64ToFile(aadhaarBase64, "aadhaar.jpg");
+
+            if (imageFile) {
+              await aadhaarService.persistAadhaarImage(
+                phoneCode,
+                phoneNumber,
+                imageFile,
+              );
+            }
           }
         }
 
         await persistGuestRegister(phoneCode, phoneNumber, "identity_verified");
 
         console.log("✅ Guest verification status updated");
-
-        sessionStorage.setItem("aadhaarData", JSON.stringify(aadhaarData));
+        if (isAadhaar) {
+          sessionStorage.setItem("aadhaarData", JSON.stringify(aadhaarData));
+          sessionStorage.setItem("aadhaarPersisted", "true");
+        }
         sessionStorage.setItem("aadhaarPersisted", "true");
-
         console.log("✅ Aadhaar Flow Completed Successfully");
       } catch (error) {
         console.error(

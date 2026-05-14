@@ -82,24 +82,24 @@ const PassportManualVerification = () => {
     const uploadData = async () => {
       try {
         // ✅ API CALL
-        const response = await uploadPassport(frontImage, backImage);
-        // const response = {
-        //   full_name: "THAPLIYAL GARIMA",
-        //   birth_place: "DELHI,DELHI",
-        //   passport_number: "SP003369",
-        //   dob: "01/07/1994",
-        //   issue_date: "03/09/2024",
-        //   expiry_date: "02/09/2034",
-        //   nationality: "INDIAN",
-        //   type: "Passport",
-        //   mrz: null,
-        //   face_image: null,
-        //   address: "173-S CHITRA GUPTA ROAD ARAM BAGH PAHAR GANJ, DELHI",
-        //   country_code: "IND",
-        //   place_of_issue: "COIMBATORE",
-        //   passport_type: "P",
-        //   gender: "M",
-        // };
+        // const response = await uploadPassport(frontImage, backImage);
+        const response = {
+          full_name: "THAPLIYAL GARIMA",
+          birth_place: "DELHI,DELHI",
+          passport_number: "SP003369",
+          dob: "01/07/1994",
+          issue_date: "03/09/2024",
+          expiry_date: "02/09/2034",
+          nationality: "INDIAN",
+          type: "Passport",
+          mrz: null,
+          face_image: null,
+          address: "173-S CHITRA GUPTA ROAD ARAM BAGH PAHAR GANJ, DELHI",
+          country_code: "IND",
+          place_of_issue: "COIMBATORE",
+          passport_type: "P",
+          gender: "M",
+        };
         console.log("Passport API Response:", response);
         await new Promise((resolve) => setTimeout(resolve, 5000));
 

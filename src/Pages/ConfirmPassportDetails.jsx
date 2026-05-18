@@ -33,7 +33,9 @@ const ConfirmPassportDetails = () => {
       (businessType === "corporate" || businessType === "hospitality") &&
       businessPlan === "enterprise"
     ) {
-      navigate("/face-match");
+      navigate("/face-match", {
+        state: { receivedPassportData },
+      });
       return;
     }
   };

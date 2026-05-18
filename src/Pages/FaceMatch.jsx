@@ -7,7 +7,7 @@ import {
   ArrowRight,
   Check,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MobileHeader from "../Components/MobileHeader";
 import ProgressBar from "../Components/ProgressBar";
 import aadhaarService from "../services/aadhaarService"; // ✅ IMPORT SERVICE
@@ -16,7 +16,8 @@ import digilockerService from "../services/digilockerService";
 
 const FaceMatch = () => {
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const receivedPassportData = location.state?.receivedPassportData;
   const [status, setStatus] = useState("waiting");
   const [progress, setProgress] = useState(0);
 
@@ -62,6 +63,13 @@ const FaceMatch = () => {
     let verificationId = null;
     let referenceId = null;
 
+    const selectedId = sessionStorage.getItem("selectedId");
+
+    if (selectedId && selectedId.toLowerCase() !== "aadhaar") {
+      verificationId = 1;
+      referenceId = 1;
+    }
+
     if (digilockerRaw) {
       try {
         const parsed = JSON.parse(digilockerRaw);
@@ -80,14 +88,12 @@ const FaceMatch = () => {
     const phoneCode = sessionStorage.getItem("phoneCountryCode") || "+91";
     const phoneNumber = sessionStorage.getItem("phoneNumber");
 
-
     const fetchAndPersist = async () => {
       try {
         if (!verificationId) {
           console.warn("Verification ID missing");
           return;
         }
-
 
         console.log("📡 Persisting DigiLocker IDs...");
 
@@ -97,13 +103,87 @@ const FaceMatch = () => {
           phoneCode,
           phoneNumber,
         );
-
         console.log("📥 DigiLocker API Response:", digilockerResponse);
 
+        if (selectedId?.toLowerCase() !== "aadhaar") {
+          try {
+            const rawAddress = receivedPassportData?.address || "";
+
+            const addressParts = rawAddress.split(",");
+
+            const firstPart = addressParts[0]?.trim() || "";
+
+            const words = firstPart.split(" ");
+
+            const house = words[0] || "";
+
+            const street = words.slice(1, 4).join(" ") || "";
+
+            const landmark = words.slice(4).join(" ") || "";
+
+            const formatDOB = (dob) => {
+              if (!dob) return "";
+
+              const date = new Date(dob);
+
+              const day = String(date.getDate()).padStart(2, "0");
+              const month = String(date.getMonth() + 1).padStart(2, "0");
+              const year = date.getFullYear();
+
+              return `${day}-${month}-${year}`;
+            };
+
+            const objectToBase64 = (data) => {
+              return btoa(JSON.stringify(data));
+            };
+
+            const aadhaarUpdatePayload = {
+              Uid: objectToBase64(receivedPassportData) || "",
+              // uid: receivedPassportData?.passport_number || "",
+              PhoneCountryCode: phoneCode,
+              PhoneNumber: phoneNumber,
+              Name: receivedPassportData?.full_name || "",
+              Gender: receivedPassportData?.gender || "",
+              DateOfBirth: formatDOB(receivedPassportData?.dob) || "",
+              Nationality: receivedPassportData?.nationality || "",
+              VerificationId: String(verificationId),
+              ReferenceId: String(referenceId),
+
+              SplitAddress: {
+                Country:
+                  receivedPassportData?.country_code === "IND"
+                    ? "India"
+                    : receivedPassportData?.country_code || "",
+                State: receivedPassportData?.birth_place || "",
+                Dist: "",
+                Subdist: "",
+                Vtc: "",
+                Po: "",
+                Street: street || "",
+                House: house || "",
+                Landmark: landmark || "null",
+                // Pincode: receivedPassportData || "",
+                Pincode: "",
+              },
+            };
+
+            const aadhaarResponse =
+              await aadhaarService.persistAadhaarUpdate(aadhaarUpdatePayload);
+
+            console.log(
+              "✅ Aadhaar update persisted successfully:",
+              aadhaarResponse,
+            );
+          } catch (aadhaarError) {
+            console.error(
+              "❌ Aadhaar update error:",
+              aadhaarError.response?.data || aadhaarError.message,
+            );
+          }
+        }
 
         const type = sessionStorage.getItem("businessType");
         const plan = sessionStorage.getItem("businessPlan");
-
 
         await persistGuestRegister(phoneCode, phoneNumber, "identity_verified");
 
@@ -232,9 +312,10 @@ const FaceMatch = () => {
         disabled={status !== "success"}
         onClick={() => navigate("/success")}
         className={`w-full h-14 rounded-[6px] shrink-0  font-bold transition flex items-center justify-center gap-2
-          ${status === "success"
-            ? "bg-[#1b3631] text-white"
-            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+          ${
+            status === "success"
+              ? "bg-[#1b3631] text-white"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
       >
         Continue

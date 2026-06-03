@@ -171,8 +171,8 @@ const Consent = () => {
     const response = await createDigilockerUrl(
       verificationId,
       [docMap[selectedId]],
-      // redirectUrl,
-      "",
+      redirectUrl,
+      // "",
       userFlow,
     );
 
